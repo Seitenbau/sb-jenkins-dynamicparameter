@@ -1,6 +1,7 @@
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -41,8 +42,7 @@ public class StringParameterDefinitionTest
   public final void testCreateValue()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
-    when(req.getParameterValues(anyString())).thenReturn(
-        new String[] {SCRIPT_RESULT});
+    when(req.getParameterValues(anyString())).thenReturn(new String[] {SCRIPT_RESULT});
 
     final ParameterValue paramValue = param.createValue(req);
 

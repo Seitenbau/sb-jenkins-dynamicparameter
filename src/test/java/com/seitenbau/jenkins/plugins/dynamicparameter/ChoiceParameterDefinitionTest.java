@@ -15,12 +15,19 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
+import static com.seitenbau.jenkins.plugins.dynamicparameter.ChoiceParameterDefinitionParameterBuilder.choiceParameterDefinitionParameter;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import hudson.model.ParameterValue;
 import hudson.model.StringParameterValue;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
@@ -39,27 +46,74 @@ public class ChoiceParameterDefinitionTest
   private static final Object[] SCRIPT_STRINGS_RESULT = new Object[] {
       "value_0", "value_1", "value_2"};
 
-  /** Test object. */
-  private ChoiceParameterDefinition param;
+  /** Test object builder. */
+  private ChoiceParameterDefinitionParameterBuilder defaultChoiceParameterBuilder;
 
-  /** Set-up method. */
+  /** Test object. */
+  private ChoiceParameterDefinition choiceParameterDefinition;
+
+  /**
+   * Set-up method.
+   */
   @Before
   public final void setUp()
   {
-    param = new ChoiceParameterDefinition("test", SCRIPT_STRINGS, "test", null,
-        false);
+    defaultChoiceParameterBuilder = choiceParameterDefinitionParameter();
+    // @formatter:off
+    defaultChoiceParameterBuilder
+      .withDescription("test")
+      .withName("test")
+      .withScript(SCRIPT_STRINGS);
+    // @formatter:on
+
+    choiceParameterDefinition = createChoiceParameterDefinition(defaultChoiceParameterBuilder);
   }
 
-  /** Test for {@link ChoiceParameterDefinition#getChoices()}. */
+  private static ChoiceParameterDefinition createChoiceParameterDefinition(
+      ChoiceParameterDefinitionParameterBuilder choiceParameterBuilder)
+  {
+    ChoiceParameterDefinitionParameter parameter = choiceParameterBuilder.build();
+    return new ChoiceParameterDefinition(parameter.getName(), parameter.getScript(),
+        parameter.getDescription(), parameter.getUuid(), parameter.isRemote());
+  }
+
+  /**
+   * Test for {@link ChoiceParameterDefinition#getChoices()}.
+   */
   @Test
   public final void testGetChoices()
   {
-    final List<Object> result = param.getChoices();
-    assertEqualLists(result.toArray(new Object[result.size()]),
-        SCRIPT_STRINGS_RESULT);
+    final List<Object> result = choiceParameterDefinition.getChoices();
+    assertEqualLists(SCRIPT_STRINGS_RESULT, result.toArray(new Object[result.size()]));
   }
 
-  /** Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}. */
+  /**
+   * Test for {@link ChoiceParameterDefinition#getChoices()}.
+   */
+  @Test
+  public final void testGetChoicesNull()
+  {
+    choiceParameterDefinition = createChoiceParameterDefinition(defaultChoiceParameterBuilder
+        .withScript("null"));
+    assertEquals(Collections.EMPTY_LIST, choiceParameterDefinition.getChoices());
+  }
+
+  /**
+   * Test for {@link ChoiceParameterDefinition#getChoices()}.
+   */
+  @Test
+  public final void testGetChoicesRemote()
+  {
+    choiceParameterDefinition = createChoiceParameterDefinition(defaultChoiceParameterBuilder
+        .withRemote(true));
+    final List<Object> result = choiceParameterDefinition.getChoices();
+    assertEqualLists(SCRIPT_STRINGS_RESULT, result.toArray(new Object[result.size()]));
+  }
+
+  /**
+   * Test for
+   * {@link ChoiceParameterDefinition#createValue(StaplerRequest)}.
+   */
   @Test
   public final void testCreateValue()
   {
@@ -68,75 +122,72 @@ public class ChoiceParameterDefinitionTest
     final StaplerRequest req = mock(StaplerRequest.class);
     when(req.getParameterValues(anyString())).thenReturn(new String[] {value});
 
-    final ParameterValue paramValue = param.createValue(req);
+    final ParameterValue paramValue = choiceParameterDefinition.createValue(req);
 
     assertNotNull(paramValue);
     assertTrue(paramValue instanceof StringParameterValue);
     assertEquals(value, ((StringParameterValue) paramValue).value);
   }
 
-  /** Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}. */
+  /**
+   * Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}.
+   */
   @Test
   public final void testCreateValueNull()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
     when(req.getParameterValues(anyString())).thenReturn(null);
 
-    assertNull(param.createValue(req));
+    assertNull(choiceParameterDefinition.createValue(req));
   }
 
-  /** Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}. */
+  /**
+   * Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}.
+   */
   @Test(expected = IllegalArgumentException.class)
   public final void testCreateValueWrongNumberOfParams()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
     when(req.getParameterValues(anyString())).thenReturn(new String[2]);
 
-    param.createValue(req);
+    choiceParameterDefinition.createValue(req);
   }
 
   /**
-   * Test for
-   * {@link ChoiceParameterDefinition#createValue(StaplerRequest)}.
+   * Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}.
    */
   @Test(expected = IllegalArgumentException.class)
   public final void testCreateValueWrongChoice()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
-    when(req.getParameterValues(anyString())).thenReturn(
-        new String[] {"invalid"});
+    when(req.getParameterValues(anyString())).thenReturn(new String[] {"invalid"});
 
-    param.createValue(req);
+    choiceParameterDefinition.createValue(req);
   }
 
   /**
-   * Compare two {@link Object} lists, by using the
-   * {@link Object#toString()} method.
-   * @param actualList actual list
+   * Compare two {@link Object} lists, by using the {@link Object#toString()} method.
    * @param expectedList expected list
+   * @param actualList actual list
    */
-  private static void assertEqualLists(final Object[] actualList,
-      final Object[] expectedList)
+  private static void assertEqualLists(final Object[] expectedList, final Object[] actualList)
   {
-    assertEquals("The two arrays have different sizes", actualList.length,
-        expectedList.length);
+    assertEquals("The two arrays have different sizes", actualList.length, expectedList.length);
 
     for (int i = 0; i < expectedList.length; i++)
     {
       final Object actual = actualList[i];
       final Object expected = expectedList[i];
 
-      if (actual == null && expected != null ||
-          actual != null && expected == null)
+      if (actual == null && expected != null || actual != null && expected == null)
       {
-        fail("Elements at index " + i + " differ: expected <" + expected
-            + "> but was <" + actual + ">");
+        fail(String.format("Elements at index %d differ: expected <%s> but was <%s>", i, expected,
+            actual));
       }
 
       if (actual != null && expected != null)
       {
-        assertEquals("Elements at index " + i + " differ",
-            expected.toString(), actual.toString());
+        assertEquals("Elements at index " + i + " differ", expected.toString(), actual.toString());
       }
     }
   }

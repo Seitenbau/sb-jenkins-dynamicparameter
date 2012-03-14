@@ -15,6 +15,7 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -29,6 +30,7 @@ import hudson.model.Node;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.remoting.Callable;
+import hudson.remoting.VirtualChannel;
 
 /** Base class for all dynamic parameters. */
 public abstract class ParameterDefinitionBase extends ParameterDefinition
@@ -37,8 +39,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   private static final long serialVersionUID = 8640419054353526544L;
 
   /** Logger. */
-  protected static final Logger LOGGER = Logger
-      .getLogger(ParameterDefinitionBase.class.getName());
+  protected static final Logger logger = Logger.getLogger(ParameterDefinitionBase.class.getName());
 
   /** Script, which generates the parameter value. */
   private final String _script;
@@ -57,10 +58,9 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
    */
-  protected ParameterDefinitionBase(final String name, final String script,
-      final String description, final String uuid, final boolean remote)
+  protected ParameterDefinitionBase(String name, String script, String description, String uuid,
+      boolean remote)
   {
-
     super(name, description);
 
     _script = script;
@@ -76,13 +76,19 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     }
   }
 
-  /** @return script, which generates the parameter value */
+  /**
+   * Get the script, which generates the parameter value.
+   * @return the script as string
+   */
   public final String getScript()
   {
     return _script;
   }
 
-  /** @return if the script should be executed remotely */
+  /**
+   * Should the script be executed to on a remote slave?
+   * @return {@code true} if the script should be executed remotely
+   */
   public final boolean isRemote()
   {
     return _remote;
@@ -96,7 +102,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     if (_remote)
     {
-      final Label label = getCurrentProject().getAssignedLabel();
+      final Label label = getCurrentProjectLabel();
       if (label != null)
       {
         return executeAt(label);
@@ -119,62 +125,69 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    * @param label node label
    * @return result from the script
    */
-  private Object executeAt(final Label label)
+  private Object executeAt(Label label)
   {
-
     try
     {
-      final Node node = label.getNodes().iterator().next();
-
-      return node.getChannel().call(new Callable<Object, Throwable>()
+      final Iterator<Node> iterator = label.getNodes().iterator();
+      while (iterator.hasNext())
       {
-
-        private static final long serialVersionUID = 1L;
-
-        public Object call()
+        final VirtualChannel channel = iterator.next().getChannel();
+        if (channel != null)
         {
-          return execute();
+          return channel.call(new Callable<Object, Throwable>()
+          {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Object call()
+            {
+              return execute();
+            }
+          });
         }
-      });
+      }
+      logger.warning(
+          String.format("Cannot find a node of the label '%s' where to execute the script",
+              label.getDisplayName()));
     }
-    catch (final Throwable e)
+    catch (Throwable e)
     {
-      LOGGER.log(Level.SEVERE, "Script for parameter '" + getName()
-          + "' could not be executed!", e);
-      return null;
+      String msg = String.format("Error during executing script for parameter '%s'", getName());
+      logger.log(Level.SEVERE, msg, e);
     }
+    return null;
   }
 
   /** @return project, where the parameter is defined */
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private AbstractProject getCurrentProject()
+  private Label getCurrentProjectLabel()
   {
-
-    final List<AbstractProject> jobs = Hudson.getInstance().getItems(
-        AbstractProject.class);
-
-    for (AbstractProject project : jobs)
+    final Hudson instance = Hudson.getInstance();
+    if (instance != null)
     {
+      final List<AbstractProject> jobs = instance.getItems(AbstractProject.class);
 
-      final ParametersDefinitionProperty prop =
-          (ParametersDefinitionProperty) project.getProperty(
-              ParametersDefinitionProperty.class);
-
-      if (prop != null)
+      for (AbstractProject project : jobs)
       {
-        final List<ParameterDefinition> parameterDefinitions = prop
-            .getParameterDefinitions();
+        final ParametersDefinitionProperty prop = (ParametersDefinitionProperty) project
+            .getProperty(ParametersDefinitionProperty.class);
 
-        if (parameterDefinitions != null)
+        if (prop != null)
         {
-          for (final ParameterDefinition pd : parameterDefinitions)
+          final List<ParameterDefinition> parameterDefinitions = prop.getParameterDefinitions();
+
+          if (parameterDefinitions != null)
           {
-            if (pd instanceof ParameterDefinitionBase)
+            for (final ParameterDefinition pd : parameterDefinitions)
             {
-              final ParameterDefinitionBase p = (ParameterDefinitionBase) pd;
-              if (p._uuid != null && p._uuid.equals(_uuid))
+              if (pd instanceof ParameterDefinitionBase)
               {
-                return project;
+                final ParameterDefinitionBase p = (ParameterDefinitionBase) pd;
+                if (p._uuid != null && p._uuid.equals(_uuid))
+                {
+                  return project.getAssignedLabel();
+                }
               }
             }
           }
