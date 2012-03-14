@@ -30,6 +30,8 @@ import hudson.model.StringParameterValue;
 import java.util.Collections;
 import java.util.List;
 
+import net.sf.json.JSONObject;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.stapler.StaplerRequest;
@@ -61,7 +63,7 @@ public class ChoiceParameterDefinitionTest
     defaultChoiceParameterBuilder = choiceParameterDefinitionParameter();
     // @formatter:off
     defaultChoiceParameterBuilder
-      .withDescription("test")
+      .withDescription("description")
       .withName("test")
       .withScript(SCRIPT_STRINGS);
     // @formatter:on
@@ -163,6 +165,24 @@ public class ChoiceParameterDefinitionTest
     when(req.getParameterValues(anyString())).thenReturn(new String[] {"invalid"});
 
     choiceParameterDefinition.createValue(req);
+  }
+
+  /** Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest, JSONObject)}. */
+  @Test
+  public void testCreateValueJSON()
+  {
+    final StaplerRequest req = mock(StaplerRequest.class);
+    // final JSONObject jo = mock(JSONObject.class);
+    final JSONObject jo = null;
+
+    final StringParameterValue value = new StringParameterValue("value",
+        (String) SCRIPT_STRINGS_RESULT[1]);
+
+    when(req.bindJSON(StringParameterValue.class, jo)).thenReturn(value);
+    final ParameterValue result = choiceParameterDefinition.createValue(req, jo);
+
+    assertEquals(value, result);
+    assertEquals(choiceParameterDefinition.getDescription(), result.getDescription());
   }
 
   /**

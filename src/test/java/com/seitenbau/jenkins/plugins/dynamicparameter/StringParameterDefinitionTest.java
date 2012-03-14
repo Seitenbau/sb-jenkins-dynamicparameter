@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import hudson.model.ParameterValue;
 import hudson.model.StringParameterValue;
 
+import net.sf.json.JSONObject;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.stapler.StaplerRequest;
@@ -21,51 +23,68 @@ public class StringParameterDefinitionTest
   private static final String SCRIPT = "return \"" + SCRIPT_RESULT + "\"";
 
   /** Test object. */
-  private StringParameterDefinition param;
+  private StringParameterDefinition stringParameterDefinition;
 
   /** Set-up method. */
   @Before
   public final void setUp()
   {
-    param = new StringParameterDefinition("test", SCRIPT, "test", null, false);
+    stringParameterDefinition = new StringParameterDefinition("test", SCRIPT, "desc", null, false);
   }
 
-  /** Test for {@link ChoiceParameterDefinition#getChoices()}. */
+  /** Test for {@link StringParameterDefinition#getDefaultValue()}. */
   @Test
   public final void testGetDefaultValue()
   {
-    assertEquals(SCRIPT_RESULT, param.getDefaultValue());
+    assertEquals(SCRIPT_RESULT, stringParameterDefinition.getDefaultValue());
   }
 
-  /** Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}. */
+  /** Test for {@link StringParameterDefinition#createValue(StaplerRequest)}. */
   @Test
   public final void testCreateValue()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
     when(req.getParameterValues(anyString())).thenReturn(new String[] {SCRIPT_RESULT});
 
-    final ParameterValue paramValue = param.createValue(req);
+    final ParameterValue paramValue = stringParameterDefinition.createValue(req);
 
     assertEquals(SCRIPT_RESULT, ((StringParameterValue) paramValue).value);
   }
 
-  /** Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}. */
+  /** Test for {@link StringParameterDefinition#createValue(StaplerRequest)}. */
   @Test
   public final void testCreateValueNull()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
     when(req.getParameterValues(anyString())).thenReturn(null);
 
-    assertNull(param.createValue(req));
+    assertNull(stringParameterDefinition.createValue(req));
   }
 
-  /** Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}. */
+  /** Test for {@link StringParameterDefinition#createValue(StaplerRequest)}. */
   @Test(expected = IllegalArgumentException.class)
   public final void testCreateValueWrongNumberOfParams()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
     when(req.getParameterValues(anyString())).thenReturn(new String[2]);
 
-    param.createValue(req);
+    stringParameterDefinition.createValue(req);
+  }
+
+  /** Test for {@link StringParameterDefinition#createValue(StaplerRequest, JSONObject)}. */
+  @Test
+  public void testCreateValueJSON()
+  {
+    final StaplerRequest req = mock(StaplerRequest.class);
+    // final JSONObject jo = mock(JSONObject.class);
+    final JSONObject jo = null;
+
+    final StringParameterValue value = new StringParameterValue("testName", "testValue");
+
+    when(req.bindJSON(StringParameterValue.class, jo)).thenReturn(value);
+    final ParameterValue result = stringParameterDefinition.createValue(req, jo);
+
+    assertEquals(value, result);
+    assertEquals(stringParameterDefinition.getDescription(), result.getDescription());
   }
 }
