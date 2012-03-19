@@ -21,6 +21,9 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.StringUtils;
+
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import hudson.model.AbstractProject;
@@ -62,11 +65,9 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
       boolean remote)
   {
     super(name, description);
-
     _script = script;
     _remote = remote;
-
-    if (uuid == null || uuid.length() == 0)
+    if (StringUtils.length(uuid) == 0)
     {
       _uuid = UUID.randomUUID();
     }
@@ -100,9 +101,9 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    */
   protected final Object getValue()
   {
-    if (_remote)
+    if (isRemote())
     {
-      final Label label = getCurrentProjectLabel();
+      Label label = getCurrentProjectLabel();
       if (label != null)
       {
         return executeAt(label);
@@ -117,7 +118,10 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    */
   private Object execute()
   {
-    return new GroovyShell(new Binding()).evaluate(_script);
+    Binding binding = new Binding();
+    GroovyShell groovyShell = new GroovyShell(binding);
+    Object evaluate = groovyShell.evaluate(_script);
+    return evaluate;
   }
 
   /**
@@ -129,7 +133,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     try
     {
-      final Iterator<Node> iterator = label.getNodes().iterator();
+      Iterator<Node> iterator = label.getNodes().iterator();
       while (iterator.hasNext())
       {
         final VirtualChannel channel = iterator.next().getChannel();
@@ -163,38 +167,50 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   @SuppressWarnings({"rawtypes", "unchecked"})
   private Label getCurrentProjectLabel()
   {
-    final Hudson instance = Hudson.getInstance();
+    Hudson instance = Hudson.getInstance();
     if (instance != null)
     {
-      final List<AbstractProject> jobs = instance.getItems(AbstractProject.class);
-
-      for (AbstractProject project : jobs)
+      List<AbstractProject> projects = instance.getItems(AbstractProject.class);
+      for (AbstractProject project : projects)
       {
-        final ParametersDefinitionProperty prop = (ParametersDefinitionProperty) project
-            .getProperty(ParametersDefinitionProperty.class);
-
-        if (prop != null)
-        {
-          final List<ParameterDefinition> parameterDefinitions = prop.getParameterDefinitions();
-
-          if (parameterDefinitions != null)
+          if(isThisParameterDefintionOf(project))
           {
-            for (final ParameterDefinition pd : parameterDefinitions)
+             return project.getAssignedLabel();
+          }
+      }
+    }
+    return null;
+  }
+  
+  /**
+   * Returns true if this parameter definition is a definition of the given project.
+   * @param project the project to search for this parameter definition.
+   * @return true when project contains this parameter defintion.
+   */
+  private boolean isThisParameterDefintionOf(AbstractProject project) 
+  {
+      ParametersDefinitionProperty parametersDefinition = (ParametersDefinitionProperty) 
+              project.getProperty(ParametersDefinitionProperty.class);
+      if (parametersDefinition != null)
+      {
+        List<ParameterDefinition> parameterDefinitions = parametersDefinition.getParameterDefinitions();
+        if (parameterDefinitions != null)
+        {
+          for (ParameterDefinition pd : parameterDefinitions)
+          {
+            if (pd instanceof ParameterDefinitionBase)
             {
-              if (pd instanceof ParameterDefinitionBase)
+              ParameterDefinitionBase parameterDefinition = (ParameterDefinitionBase) pd;
+              UUID parameterUUID = parameterDefinition._uuid;
+              if (ObjectUtils.equals(parameterUUID, this._uuid))
               {
-                final ParameterDefinitionBase p = (ParameterDefinitionBase) pd;
-                if (p._uuid != null && p._uuid.equals(_uuid))
-                {
-                  return project.getAssignedLabel();
-                }
+                return true;
               }
             }
           }
         }
       }
-    }
-
-    return null;
+      return false;
   }
+
 }
