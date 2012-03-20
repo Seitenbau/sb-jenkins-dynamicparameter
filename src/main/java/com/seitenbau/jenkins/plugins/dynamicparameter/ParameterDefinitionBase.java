@@ -141,34 +141,60 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    */
   private Object executeAt(Label label)
   {
+    final VirtualChannel channel = findActiveChannel(label);
+    if (channel == null)
+    {
+      logger.warning(
+          String.format("Cannot find a node of the label '%s' where to execute the script",
+          label.getDisplayName()));
+      return null;
+    }
+    return executeAt(channel);
+  }
+
+  /**
+   * Execute the script at the given node.
+   * @param channel node channel
+   * @return result from the script
+   */
+  private Object executeAt(VirtualChannel channel)
+  {
     try
     {
-      Iterator<Node> iterator = label.getNodes().iterator();
-      while (iterator.hasNext())
+      return channel.call(new Callable<Object, Throwable>()
       {
-        final VirtualChannel channel = iterator.next().getChannel();
-        if (channel != null)
-        {
-          return channel.call(new Callable<Object, Throwable>()
-          {
-            private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1L;
 
-            @Override
-            public Object call()
-            {
-              return execute();
-            }
-          });
+        @Override
+        public Object call()
+        {
+          return execute();
         }
-      }
-      logger.warning(String.format(
-          "Cannot find a node of the label '%s' where to execute the script",
-          label.getDisplayName()));
+      });
     }
     catch (Throwable e)
     {
       String msg = String.format("Error during executing script for parameter '%s'", getName());
       logger.log(Level.SEVERE, msg, e);
+    }
+    return null;
+  }
+
+  /**
+   * Find an active node channel of a given label.
+   * @param label label which nodes to search
+   * @return active node channel or {@code null} if none found
+   */
+  private static VirtualChannel findActiveChannel(Label label)
+  {
+    Iterator<Node> iterator = label.getNodes().iterator();
+    while (iterator.hasNext())
+    {
+      final VirtualChannel channel = iterator.next().getChannel();
+      if (channel != null)
+      {
+        return channel;
+      }
     }
     return null;
   }
