@@ -24,9 +24,6 @@ import java.util.List;
 
 import net.sf.json.JSONObject;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.ListUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jvnet.localizer.ResourceBundleHolder;
@@ -62,12 +59,12 @@ public class ChoiceParameterDefinition extends ParameterDefinitionBase
   @SuppressWarnings("unchecked")
   public final List<Object> getChoices()
   {
-    final Object value = getValue();
+    Object value = getValue();
     if (value instanceof List)
     {
       return (List<Object>) value;
     }
-    final String name = getName();
+    String name = getName();
     String msg = String.format("Script parameter with name '%s' is not a instance of "
         + "java.util.List the parameter value is : %s", name, value);
     logger.info(msg);
@@ -77,11 +74,11 @@ public class ChoiceParameterDefinition extends ParameterDefinitionBase
   @Override
   public final ParameterValue createValue(StaplerRequest req, JSONObject jo)
   {
-    final StringParameterValue parameterValue = req.bindJSON(StringParameterValue.class, jo);
+    StringParameterValue parameterValue = req.bindJSON(StringParameterValue.class, jo);
     parameterValue.setDescription(getDescription());
     return findPreDefinedParameterValue(parameterValue);
   }
-  
+
   @Override
   public final ParameterValue createValue(StaplerRequest req)
   {
@@ -90,7 +87,7 @@ public class ChoiceParameterDefinition extends ParameterDefinitionBase
     return createParameterValue(name, values);
   }
 
-  private ParameterValue createParameterValue(String name, String[] values) 
+  private ParameterValue createParameterValue(String name, String[] values)
   {
     if (values == null)
     {
@@ -106,19 +103,19 @@ public class ChoiceParameterDefinition extends ParameterDefinitionBase
       throw new IllegalArgumentException(String.format(
           "Illegal number of parameter values for '%s': %d", getName(), values.length));
     }
-}
-  
+  }
+
   /**
    * Factory methods creates a String parameter value object for the given value.
    * @param value of the object
    * @return String parameter value object not null.
    */
-  private StringParameterValue createStringParameterValueFor(String name, String value) 
+  private StringParameterValue createStringParameterValueFor(String name, String value)
   {
-     String description = getDescription();
-     StringParameterValue parameterValue = new StringParameterValue(name, value, description);
-     return parameterValue;
-   }
+    String description = getDescription();
+    StringParameterValue parameterValue = new StringParameterValue(name, value, description);
+    return parameterValue;
+  }
 
   /**
    * Check if the given parameter value is within the list of possible
@@ -128,10 +125,10 @@ public class ChoiceParameterDefinition extends ParameterDefinitionBase
    */
   private StringParameterValue findPreDefinedParameterValue(StringParameterValue parameter)
   {
-    final String actualValue = ObjectUtils.toString(parameter.value);
-    for (final Object choice : getChoices())
+    String actualValue = ObjectUtils.toString(parameter.value);
+    for (Object choice : getChoices())
     {
-      final String choiceValue = ObjectUtils.toString(choice);
+      String choiceValue = ObjectUtils.toString(choice);
       if (StringUtils.equals(actualValue, choiceValue))
       {
         return parameter;
@@ -142,11 +139,11 @@ public class ChoiceParameterDefinition extends ParameterDefinitionBase
 
   /** Parameter descriptor. */
   @Extension
-  public static class DescriptorImpl extends ParameterDescriptor
+  public static final class DescriptorImpl extends ParameterDescriptor
   {
     private static final String DISPLAY_NAME = "DisplayName";
 
-	@Override
+    @Override
     public final String getDisplayName()
     {
       return ResourceBundleHolder.get(ChoiceParameterDefinition.class).format(DISPLAY_NAME);

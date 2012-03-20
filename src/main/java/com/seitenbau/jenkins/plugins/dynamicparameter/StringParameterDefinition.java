@@ -52,14 +52,14 @@ public class StringParameterDefinition extends ParameterDefinitionBase
    */
   public final String getDefaultValue()
   {
-    final Object value = getValue();
+    Object value = getValue();
     return ObjectUtils.toString(value, null);
   }
 
   @Override
   public final ParameterValue createValue(StaplerRequest req, JSONObject jo)
   {
-    final StringParameterValue parameterValue = req.bindJSON(StringParameterValue.class, jo);
+    StringParameterValue parameterValue = req.bindJSON(StringParameterValue.class, jo);
     parameterValue.setDescription(getDescription());
     return parameterValue;
   }
@@ -67,7 +67,7 @@ public class StringParameterDefinition extends ParameterDefinitionBase
   @Override
   public final ParameterValue createValue(StaplerRequest req)
   {
-    final String[] values = req.getParameterValues(getName());
+    String[] values = req.getParameterValues(getName());
 
     if (values == null)
     {
@@ -87,12 +87,14 @@ public class StringParameterDefinition extends ParameterDefinitionBase
 
   /** Parameter descriptor. */
   @Extension
-  public static class DescriptorImpl extends ParameterDescriptor
+  public static final class DescriptorImpl extends ParameterDescriptor
   {
+    private static final String DISPLAY_NAME = "DisplayName";
+
     @Override
     public final String getDisplayName()
     {
-      return ResourceBundleHolder.get(StringParameterDefinition.class).format("DisplayName");
+      return ResourceBundleHolder.get(StringParameterDefinition.class).format(DISPLAY_NAME);
     }
   }
 }

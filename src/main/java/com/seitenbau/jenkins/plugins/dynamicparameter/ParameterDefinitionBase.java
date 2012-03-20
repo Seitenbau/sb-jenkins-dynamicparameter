@@ -164,7 +164,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /** @return project, where the parameter is defined */
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings("rawtypes")
   private Label getCurrentProjectLabel()
   {
     Hudson instance = Hudson.getInstance();
@@ -181,15 +181,16 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     }
     return null;
   }
-  
+
   /**
    * Returns true if this parameter definition is a definition of the given project.
    * @param project the project to search for this parameter definition.
    * @return true when project contains this parameter defintion.
    */
-  private boolean isThisParameterDefintionOf(AbstractProject project) 
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private boolean isThisParameterDefintionOf(AbstractProject project)
   {
-      ParametersDefinitionProperty parametersDefinition = (ParametersDefinitionProperty) 
+      ParametersDefinitionProperty parametersDefinition = (ParametersDefinitionProperty)
               project.getProperty(ParametersDefinitionProperty.class);
       if (parametersDefinition != null)
       {

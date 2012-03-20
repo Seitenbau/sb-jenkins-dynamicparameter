@@ -167,12 +167,14 @@ public class ChoiceParameterDefinitionTest
     choiceParameterDefinition.createValue(req);
   }
 
-  /** Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest, JSONObject)}. */
+  /**
+   * Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest, JSONObject)}.
+   */
   @Test
   public void testCreateValueJSON()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
-    // final JSONObject jo = mock(JSONObject.class);
+    // final JSONObject jo = mock(JSONObject.class); // mockito cannot mock final classes
     final JSONObject jo = null;
 
     final StringParameterValue value = new StringParameterValue("value",
