@@ -59,7 +59,7 @@ public class ChoiceParameterDefinition extends ParameterDefinitionBase
   @SuppressWarnings("unchecked")
   public final List<Object> getChoices()
   {
-    Object value = getValue();
+    Object value = generateValue();
     if (value instanceof List)
     {
       return (List<Object>) value;

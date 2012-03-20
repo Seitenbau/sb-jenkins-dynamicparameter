@@ -96,14 +96,23 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
+   * Get unique id for this parameter definition.
+   * @return the _uuid
+   */
+  public final UUID getUUID()
+  {
+    return _uuid;
+  }
+
+  /**
    * Execute the script and return the result value.
    * @return result from the script
    */
-  protected final Object getValue()
+  protected final Object generateValue()
   {
     if (isRemote())
     {
-      Label label = getCurrentProjectLabel();
+      Label label = findCurrentProjectLabel();
       if (label != null)
       {
         return executeAt(label);
@@ -120,7 +129,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     Binding binding = new Binding();
     GroovyShell groovyShell = new GroovyShell(binding);
-    Object evaluate = groovyShell.evaluate(_script);
+    Object evaluate = groovyShell.evaluate(getScript());
     return evaluate;
   }
 
@@ -151,9 +160,9 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
           });
         }
       }
-      logger.warning(
-          String.format("Cannot find a node of the label '%s' where to execute the script",
-              label.getDisplayName()));
+      logger.warning(String.format(
+          "Cannot find a node of the label '%s' where to execute the script",
+          label.getDisplayName()));
     }
     catch (Throwable e)
     {
@@ -163,9 +172,12 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     return null;
   }
 
-  /** @return project, where the parameter is defined */
+  /**
+   * Find the label assigned to the current project.
+   * @return {@code null} if the label of the current project cannot be found
+   */
   @SuppressWarnings("rawtypes")
-  private Label getCurrentProjectLabel()
+  private Label findCurrentProjectLabel()
   {
     Hudson instance = Hudson.getInstance();
     if (instance != null)
@@ -173,10 +185,10 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
       List<AbstractProject> projects = instance.getItems(AbstractProject.class);
       for (AbstractProject project : projects)
       {
-          if(isThisParameterDefintionOf(project))
-          {
-             return project.getAssignedLabel();
-          }
+        if (isThisParameterDefintionOf(project))
+        {
+          return project.getAssignedLabel();
+        }
       }
     }
     return null;
@@ -185,33 +197,34 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   /**
    * Returns true if this parameter definition is a definition of the given project.
    * @param project the project to search for this parameter definition.
-   * @return true when project contains this parameter defintion.
+   * @return {@code true} if the project contains this parameter definition.
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
   private boolean isThisParameterDefintionOf(AbstractProject project)
   {
-      ParametersDefinitionProperty parametersDefinition = (ParametersDefinitionProperty)
-              project.getProperty(ParametersDefinitionProperty.class);
-      if (parametersDefinition != null)
+    ParametersDefinitionProperty parametersDefinitionProperty =
+        (ParametersDefinitionProperty) project.getProperty(ParametersDefinitionProperty.class);
+    if (parametersDefinitionProperty != null)
+    {
+      List<ParameterDefinition> parameterDefinitions = parametersDefinitionProperty
+          .getParameterDefinitions();
+      if (parameterDefinitions != null)
       {
-        List<ParameterDefinition> parameterDefinitions = parametersDefinition.getParameterDefinitions();
-        if (parameterDefinitions != null)
+        for (ParameterDefinition pd : parameterDefinitions)
         {
-          for (ParameterDefinition pd : parameterDefinitions)
+          if (pd instanceof ParameterDefinitionBase)
           {
-            if (pd instanceof ParameterDefinitionBase)
+            ParameterDefinitionBase parameterDefinition = (ParameterDefinitionBase) pd;
+            UUID parameterUUID = parameterDefinition.getUUID();
+            if (ObjectUtils.equals(parameterUUID, this.getUUID()))
             {
-              ParameterDefinitionBase parameterDefinition = (ParameterDefinitionBase) pd;
-              UUID parameterUUID = parameterDefinition._uuid;
-              if (ObjectUtils.equals(parameterUUID, this._uuid))
-              {
-                return true;
-              }
+              return true;
             }
           }
         }
       }
-      return false;
+    }
+    return false;
   }
 
 }

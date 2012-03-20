@@ -52,7 +52,7 @@ public class StringParameterDefinition extends ParameterDefinitionBase
    */
   public final String getDefaultValue()
   {
-    Object value = getValue();
+    Object value = generateValue();
     return ObjectUtils.toString(value, null);
   }
 
