@@ -15,6 +15,7 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -199,8 +200,32 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    * @param project the project to search for this parameter definition.
    * @return {@code true} if the project contains this parameter definition.
    */
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings("rawtypes")
   private boolean isThisParameterDefintionOf(AbstractProject project)
+  {
+    List<ParameterDefinition> parameterDefinitions = getProjectParameterDefinitions(project);
+    for (ParameterDefinition pd : parameterDefinitions)
+    {
+      if (pd instanceof ParameterDefinitionBase)
+      {
+        ParameterDefinitionBase parameterDefinition = (ParameterDefinitionBase) pd;
+        UUID parameterUUID = parameterDefinition.getUUID();
+        if (ObjectUtils.equals(parameterUUID, this.getUUID()))
+        {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Get the parameter definitions for the given project.
+   * @param project the project for which the parameter definitions should be found
+   * @return parameter definitions or an empty list
+   */
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private static List<ParameterDefinition> getProjectParameterDefinitions(AbstractProject project)
   {
     ParametersDefinitionProperty parametersDefinitionProperty =
         (ParametersDefinitionProperty) project.getProperty(ParametersDefinitionProperty.class);
@@ -210,21 +235,10 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
           .getParameterDefinitions();
       if (parameterDefinitions != null)
       {
-        for (ParameterDefinition pd : parameterDefinitions)
-        {
-          if (pd instanceof ParameterDefinitionBase)
-          {
-            ParameterDefinitionBase parameterDefinition = (ParameterDefinitionBase) pd;
-            UUID parameterUUID = parameterDefinition.getUUID();
-            if (ObjectUtils.equals(parameterUUID, this.getUUID()))
-            {
-              return true;
-            }
-          }
-        }
+        return parameterDefinitions;
       }
     }
-    return false;
+    return Collections.EMPTY_LIST;
   }
 
 }
