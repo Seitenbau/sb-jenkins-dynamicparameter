@@ -119,18 +119,18 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
         return executeAt(label);
       }
     }
-    return execute();
+    return execute(getScript());
   }
 
   /**
    * Execute the script locally.
    * @return result from the script
    */
-  private Object execute()
+  private static Object execute(String script)
   {
     Binding binding = new Binding();
     GroovyShell groovyShell = new GroovyShell(binding);
-    Object evaluate = groovyShell.evaluate(getScript());
+    Object evaluate = groovyShell.evaluate(script);
     return evaluate;
   }
 
@@ -161,16 +161,8 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     try
     {
-      return channel.call(new Callable<Object, Throwable>()
-      {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public Object call()
-        {
-          return execute();
-        }
-      });
+      RemoteCall call = new RemoteCall(getScript());
+      return channel.call(call);
     }
     catch (Throwable e)
     {
@@ -265,6 +257,31 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
       }
     }
     return Collections.EMPTY_LIST;
+  }
+
+  /**
+   * Remote call implementation.
+   */
+  public static final class RemoteCall implements Callable<Object, Throwable>
+  {
+    private static final long serialVersionUID = -8281488869664773282L;
+
+    private final String remoteScript;
+
+    /**
+     * Constructor.
+     * @param script script to execute
+     */
+    public RemoteCall(String script)
+    {
+      remoteScript = script;
+    }
+
+    @Override
+    public Object call()
+    {
+      return execute(remoteScript);
+    }
   }
 
 }
