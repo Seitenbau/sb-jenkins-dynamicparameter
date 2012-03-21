@@ -15,6 +15,9 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -24,9 +27,11 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.groovy.control.CompilerConfiguration;
 
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import hudson.FilePath;
 import hudson.model.AbstractProject;
 import hudson.model.Hudson;
 import hudson.model.Label;
@@ -42,6 +47,9 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   /** Serial version UID. */
   private static final long serialVersionUID = 8640419054353526544L;
 
+  /** Class path. */
+  public static final String DEFAULT_CLASSPATH = "dynamic_parameter_classpath";
+
   /** Logger. */
   protected static final Logger logger = Logger.getLogger(ParameterDefinitionBase.class.getName());
 
@@ -53,6 +61,8 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
 
   /** Flag showing if the script should be executed remotely. */
   private final boolean _remote;
+
+  private final FilePath _classPath;
 
   /**
    * Constructor.
@@ -66,6 +76,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
       boolean remote)
   {
     super(name, description);
+    _classPath = new FilePath(new File(DEFAULT_CLASSPATH));
     _script = script;
     _remote = remote;
     if (StringUtils.length(uuid) == 0)
@@ -76,6 +87,11 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     {
       _uuid = UUID.fromString(uuid);
     }
+  }
+
+  public final FilePath getClassPath()
+  {
+    return _classPath;
   }
 
   /**
@@ -119,11 +135,13 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
         return executeAt(label);
       }
     }
-    return execute(getScript());
+    //return execute(getScript());
+    return execute(getScript(), getClassPath());
   }
 
   /**
    * Execute the script locally.
+   * @param script script to execute
    * @return result from the script
    */
   private static Object execute(String script)
@@ -132,6 +150,40 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     GroovyShell groovyShell = new GroovyShell(binding);
     Object evaluate = groovyShell.evaluate(script);
     return evaluate;
+  }
+
+  /**
+   * Execute the script locally.
+   * @param script script to execute
+   * @param classPath class path
+   * @return result from the script
+   * @throws Exception
+   */
+  private static Object execute(String script, FilePath classPath)
+  {
+    try
+    {
+      String classPathString = classPath.absolutize().toURI().toURL().getPath();
+      File f = new File("/home/build/test.1.log");
+
+      OutputStreamWriter s = new OutputStreamWriter(new FileOutputStream(f));
+      s.write(classPathString);
+      s.close();
+
+      logger.info("Remote class path is: " + classPathString);
+
+      CompilerConfiguration config = new CompilerConfiguration();
+      config.setClasspath(classPathString);
+
+      GroovyShell groovyShell = new GroovyShell(config);
+      Object evaluate = groovyShell.evaluate(script);
+      return evaluate;
+    }
+    catch (Exception e)
+    {
+      logger.log(Level.SEVERE, "Cannot access class path", e);
+      return null;
+    }
   }
 
   /**
@@ -161,7 +213,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     try
     {
-      RemoteCall call = new RemoteCall(getScript());
+      RemoteCall call = new RemoteCall(getScript(), getClassPath());
       return channel.call(call);
     }
     catch (Throwable e)
@@ -266,21 +318,32 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     private static final long serialVersionUID = -8281488869664773282L;
 
-    private final String remoteScript;
+    private final String _remoteScript;
+
+    private final FilePath _classPath;
 
     /**
      * Constructor.
      * @param script script to execute
+     * @param classPath class path
      */
-    public RemoteCall(String script)
+    public RemoteCall(String script, FilePath classPath)
     {
-      remoteScript = script;
+      _remoteScript = script;
+      _classPath = classPath;
     }
 
     @Override
     public Object call()
     {
-      return execute(remoteScript);
+      if(_classPath == null)
+      {
+        return execute(_remoteScript);
+      }
+      else
+      {
+        return execute(_remoteScript, _classPath);
+      }
     }
   }
 
