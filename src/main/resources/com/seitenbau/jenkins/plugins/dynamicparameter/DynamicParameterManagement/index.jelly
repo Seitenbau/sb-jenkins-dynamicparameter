@@ -1,0 +1,117 @@
+<!--
+Copyright 2012 Seitenbau
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+  xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+
+  <l:layout permission="${it.ADMINISTER}" norefresh="true" title="${%title}">
+
+	  <l:side-panel>
+	    <l:tasks>
+	      <l:task icon="images/24x24/setting.png" href="${rootURL}/manage" title="${%Manage Jenkins}"
+          permission="${app.ADMINISTER}" />
+      </l:tasks>
+    </l:side-panel>
+
+    <l:main-panel>
+
+      <h1>
+        <img src="${imagesURL}/48x48/${it.iconFileName}" alt="" />
+        <j:out value="${%title}" />
+      </h1>
+
+      <j:out value="${%intro}" />
+
+      <h3><j:out value="${%classPathDirText}"/></h3>
+
+      <f:form method="post" action="setClassPathDir">
+        <f:block>
+		      <f:textbox name="baseDirectory" value="${it.baseDirectory}" />
+	      </f:block>
+        <f:block>
+          <f:submit value="${%save}" />
+        </f:block>
+      </f:form>
+
+
+      <h3><j:out value="${%uploadFile}"/></h3>
+
+      <f:form method="post" action="uploadFile" name="uploadFile" enctype="multipart/form-data">
+        <f:block>
+          <f:entry title="${%classPathDirectory}">
+            <f:textbox name="classPathDirectory" value="${it.lastClassPathDirectory}"/>
+          </f:entry>
+          <f:entry title="${%classFile}">
+            <input type="file" name="file" class="setting-input" />
+          </f:entry>
+        </f:block>
+        <f:block>
+          <f:submit value="${%upload}" />
+        </f:block>
+      </f:form>
+
+
+      <h3><j:out value="${%uploadedFiles}"/></h3>
+
+      <j:forEach var="dir" items="${it.classPathDirectories}">
+	      <table class="pane">
+
+          <thead>
+						<tr style="border-top: 0px;">
+						  <th class="pane" width="86">
+	              <img width="16" height="16" title="${%classPathDirectory}" src="${imagesURL}/16x16/folder.png" />
+                <j:out value=" " />
+						    <a href="deleteFile?file=${dir}" onclick="return confirmDelete('${dir}')">
+	                <img width="16" height="16" title="${%deleteFile} ${dir}" src="${imagesURL}/16x16/edit-delete.png" />
+	              </a>
+						  </th>
+						  <th class="pane" style="text-align: left;">
+	              <j:out value="${dir}" />
+						  </th>
+						</tr>
+					</thead>
+
+	        <j:forEach var="file" items="${it.getUploadedFiles(dir)}">
+	          <tr style="border-top: 0px;">
+	            <td class="pane" width="86" style="text-align: center;">
+	              <a href="downloadFile?file=${dir}/${file}">
+	                <img width="16" height="16" title="${%downloadFile} ${file}" src="${imagesURL}/16x16/document_edit.png" />
+	              </a>
+	              <j:out value=" " />
+	              <a href="deleteFile?file=${dir}/${file}" onclick="return confirmDelete('${file}')">
+	                <img width="16" height="16" title="${%deleteFile} ${file}" src="${imagesURL}/16x16/edit-delete.png" />
+	              </a>
+	            </td>
+	            <td class="pane">
+	              <j:out value="${file}" />
+	            </td>
+	          </tr>
+	        </j:forEach>
+
+        </table>
+      </j:forEach>
+
+      <script>
+function confirmDelete(name) {
+  if (confirm("${%deleteConfirmation} ["+name+"]?")) {
+    return true;
+  } else {
+    return false;
+  }
+}
+    </script>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>

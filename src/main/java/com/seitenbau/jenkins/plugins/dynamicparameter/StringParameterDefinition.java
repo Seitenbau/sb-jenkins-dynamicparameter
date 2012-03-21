@@ -41,9 +41,9 @@ public class StringParameterDefinition extends ParameterDefinitionBase
    */
   @DataBoundConstructor
   public StringParameterDefinition(String name, String script, String description, String uuid,
-      boolean remote)
+      boolean remote, String classPath)
   {
-    super(name, script, description, uuid, remote);
+    super(name, script, description, uuid, remote, classPath);
   }
 
   /**
@@ -87,7 +87,7 @@ public class StringParameterDefinition extends ParameterDefinitionBase
 
   /** Parameter descriptor. */
   @Extension
-  public static final class DescriptorImpl extends ParameterDescriptor
+  public static final class DescriptorImpl extends BaseDescriptor
   {
     private static final String DISPLAY_NAME = "DisplayName";
 

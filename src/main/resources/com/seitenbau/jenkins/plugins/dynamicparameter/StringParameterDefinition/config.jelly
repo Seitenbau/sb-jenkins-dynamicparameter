@@ -22,6 +22,9 @@ limitations under the License.
   <f:entry title="${%Default Value Script}" field="defaultValueScript">
     <f:textarea name="parameter.script" value="${instance.script}" />
   </f:entry>
+  <f:entry title="${%Class Paths}" field="classPath">
+    <f:textbox name="parameter.classPath" value="${instance.classPath}" />
+  </f:entry>
   <f:entry title="${%Remote Script}" field="remoteScript">
     <f:checkbox name="parameter.remote" checked="${instance.remote}" />
   </f:entry>
