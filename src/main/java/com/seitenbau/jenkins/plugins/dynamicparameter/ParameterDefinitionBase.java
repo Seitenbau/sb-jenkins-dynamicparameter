@@ -16,8 +16,7 @@
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +28,6 @@ import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 
-import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import hudson.FilePath;
 import hudson.model.AbstractProject;
@@ -50,6 +48,9 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   /** Class path. */
   public static final String DEFAULT_CLASSPATH = "dynamic_parameter_classpath";
 
+  /** Class path on remote slaves. */
+  public static final String DEFAULT_REMOTE_CLASSPATH = "dynamic_parameter_classpath";
+
   /** Logger. */
   protected static final Logger logger = Logger.getLogger(ParameterDefinitionBase.class.getName());
 
@@ -62,7 +63,11 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   /** Flag showing if the script should be executed remotely. */
   private final boolean _remote;
 
-  private final FilePath _classPath;
+  /** Local class path. */
+  private final FilePath _localClassPath;
+
+  /** Remote class path. */
+  private final String _remoteClassPath;
 
   /**
    * Constructor.
@@ -76,7 +81,8 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
       boolean remote)
   {
     super(name, description);
-    _classPath = new FilePath(new File(DEFAULT_CLASSPATH));
+    _localClassPath = new FilePath(new File(DEFAULT_CLASSPATH));
+    _remoteClassPath = DEFAULT_REMOTE_CLASSPATH;
     _script = script;
     _remote = remote;
     if (StringUtils.length(uuid) == 0)
@@ -89,9 +95,22 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     }
   }
 
-  public final FilePath getClassPath()
+  /**
+   * Local class path directory.
+   * @return directory on the local node
+   */
+  public final FilePath getLocalClassPath()
   {
-    return _classPath;
+    return _localClassPath;
+  }
+
+  /**
+   * Remote class path directory.
+   * @return directory on a remote node
+   */
+  public final String getRemoteClassPath()
+  {
+    return _remoteClassPath;
   }
 
   /**
@@ -135,8 +154,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
         return executeAt(label);
       }
     }
-    //return execute(getScript());
-    return execute(getScript(), getClassPath());
+    return execute(getScript(), getLocalClassPath());
   }
 
   /**
@@ -146,14 +164,14 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    */
   private static Object execute(String script)
   {
-    Binding binding = new Binding();
-    GroovyShell groovyShell = new GroovyShell(binding);
+    CompilerConfiguration config = new CompilerConfiguration();
+    GroovyShell groovyShell = new GroovyShell(config);
     Object evaluate = groovyShell.evaluate(script);
     return evaluate;
   }
 
   /**
-   * Execute the script locally.
+   * Execute the script locally using the given class path.
    * @param script script to execute
    * @param classPath class path
    * @return result from the script
@@ -163,20 +181,15 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     try
     {
-      String classPathString = classPath.absolutize().toURI().toURL().getPath();
-      File f = new File("/home/build/test.1.log");
-
-      OutputStreamWriter s = new OutputStreamWriter(new FileOutputStream(f));
-      s.write(classPathString);
-      s.close();
-
-      logger.info("Remote class path is: " + classPathString);
-
+      // set class path
       CompilerConfiguration config = new CompilerConfiguration();
+      String classPathString = classPath.absolutize().toURI().toURL().getPath();
       config.setClasspath(classPathString);
 
+      // execute script
       GroovyShell groovyShell = new GroovyShell(config);
       Object evaluate = groovyShell.evaluate(script);
+
       return evaluate;
     }
     catch (Exception e)
@@ -205,6 +218,23 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
+   * Copy the local classpath directory to a remote node.
+   * @param channel node channel
+   * @return remote classpath
+   * @throws IOException if copy to remote fails
+   * @throws InterruptedException if copy to remote fails
+   */
+  private FilePath setupRemoteClassPath(VirtualChannel channel) throws IOException,
+      InterruptedException
+  {
+    // TODO check if classpath is up-to-date and does not need a new copy
+    FilePath remoteClassPath = new FilePath(channel, getRemoteClassPath());
+    getLocalClassPath().copyRecursiveTo(remoteClassPath);
+
+    return remoteClassPath;
+  }
+
+  /**
    * Execute the script at the given node.
    * @param channel node channel
    * @return result from the script
@@ -213,7 +243,8 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     try
     {
-      RemoteCall call = new RemoteCall(getScript(), getClassPath());
+      FilePath remoteClassPath = setupRemoteClassPath(channel);
+      RemoteCall call = new RemoteCall(getScript(), remoteClassPath);
       return channel.call(call);
     }
     catch (Throwable e)
@@ -345,6 +376,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
         return execute(_remoteScript, _classPath);
       }
     }
+
   }
 
 }
