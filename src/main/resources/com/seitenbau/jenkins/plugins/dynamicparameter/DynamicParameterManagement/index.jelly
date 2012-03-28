@@ -35,7 +35,7 @@ limitations under the License.
 
       <h3><j:out value="${%classPathDirText}"/></h3>
 
-      <f:form method="post" action="changeClassPathDir">
+      <f:form method="post" action="setClassPathDir">
         <f:block>
 		      <f:textbox name="classPathDir" value="${it.classPathDir}" />
 	      </f:block>
@@ -61,12 +61,32 @@ limitations under the License.
 
       <table class="pane">
         <j:forEach var="file" items="${it.uploadedFiles}">
-          <tr>
-            <td><j:out value="${file}" /></td>
+          <tr style="border-top: 0px;">
+            <td class="pane" width="86">
+              <a href="downloadFile?file=${file}">
+                <img width="16" height="16" title="${%downloadFile} ${file}" src="${imagesURL}/16x16/document_edit.gif" />
+              </a>
+              <j:out value=" " />
+              <a href="deleteFile?file=${file}" onclick="return confirmDelete('${file}')">
+                <img width="16" height="16" title="${%deleteFile} ${file}" src="${imagesURL}/16x16/edit-delete.gif" />
+              </a>
+            </td>
+            <td class="pane">
+              <j:out value="${file}" />
+            </td>
           </tr>
         </j:forEach>
       </table>
 
+      <script>
+function confirmDelete(name) {
+  if (confirm("${%deleteConfirmation} ["+name+"]?")) {
+    return true;
+  } else {
+    return false;
+  }
+}
+    </script>
     </l:main-panel>
   </l:layout>
 </j:jelly>

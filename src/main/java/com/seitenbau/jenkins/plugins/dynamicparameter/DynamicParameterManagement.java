@@ -1,15 +1,22 @@
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.kohsuke.stapler.QueryParameter;
-
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.ManagementLink;
-import hudson.util.FormValidation;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.HttpRedirect;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /** Plugin configuration. */
 @Extension
@@ -41,33 +48,19 @@ public class DynamicParameterManagement extends ManagementLink
     return "Settings for dynamic parameters";
   }
 
+  /**
+   * Get the class path directory.
+   * @return path to the class path directory
+   */
   public String getClassPathDir()
   {
-    return ParameterDefinitionBase.DEFAULT_CLASSPATH;
+    return DynamicParameterConfiguration.INSTANCE.getClassPathDirectory();
   }
 
   /**
-   * Set class path directory
-   * @param classPath new class path directory
+   * Get a list with uploaded files.
+   * @return an array with file names or an empty array
    */
-  public void setClassPathDir(String classPath)
-  {
-
-  }
-
-  public FormValidation doCheckClassPathDir(@QueryParameter String value)
-  {
-    File directory = new File(value);
-    if (directory.isDirectory())
-    {
-      return FormValidation.ok();
-    }
-    else
-    {
-      return FormValidation.error("The given path is not a directory!");
-    }
-  }
-
   public String[] getUploadedFiles()
   {
     File classPathDir = new File(getClassPathDir());
@@ -76,5 +69,82 @@ public class DynamicParameterManagement extends ManagementLink
       return classPathDir.list();
     }
     return EMPTY_ARRAY;
+  }
+
+  /**
+   * Set the class path directory.
+   * @param classPathDir new class path directory
+   * @return redirect to {@code index}
+   * @throws IOException
+   * @throws ServletException
+   */
+  public HttpResponse doSetClassPathDir(@QueryParameter("classPathDir") String classPathDir)
+      throws IOException, ServletException
+  {
+    DynamicParameterConfiguration.INSTANCE.setClassPathDirectory(classPathDir);
+    return new HttpRedirect("index");
+  }
+
+  /**
+   * Upload a script file to the class path directory.
+   * @param request HTTP request
+   * @return redirect to {@code index}
+   * @throws Exception
+   */
+  public HttpResponse doUploadFile(StaplerRequest request) throws Exception
+  {
+    File directory = new File(getClassPathDir());
+    if (!directory.exists())
+    {
+      directory.mkdirs();
+    }
+
+    FileItem fileItem = request.getFileItem("file");
+    String fileName = Util.getFileName(fileItem.getName());
+    if (StringUtils.isEmpty(fileName))
+    {
+      return new HttpRedirect(".");
+    }
+    fileItem.write(new File(directory, fileName));
+    return new HttpRedirect("index");
+  }
+
+  /**
+   * Download the specified file.
+   * @param request HTTP request
+   * @param response HTTP response
+   * @param filePath file path
+   * @throws ServletException
+   * @throws IOException
+   */
+  public void doDownloadFile(StaplerRequest request, StaplerResponse response,
+      @QueryParameter("file") String filePath) throws ServletException, IOException
+  {
+    File file = new File(getClassPathDir(), filePath);
+    FileInputStream inputStream = new FileInputStream(file);
+    try
+    {
+      response.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
+      response.serveFile(request, inputStream, file.lastModified(), file.length(), file.getName());
+    }
+    finally
+    {
+      inputStream.close();
+    }
+  }
+
+  /**
+   * Delete the specified file.
+   * @param filePath file path
+   * @return
+   */
+  public HttpResponse doDeleteFile(@QueryParameter("file") String filePath)
+  {
+    File file = new File(getClassPathDir(), filePath);
+    if(file.isFile())
+    {
+      file.delete();
+    }
+    return new HttpRedirect("index");
   }
 }

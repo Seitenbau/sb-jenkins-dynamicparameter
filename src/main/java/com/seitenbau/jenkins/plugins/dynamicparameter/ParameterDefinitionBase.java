@@ -16,6 +16,7 @@
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
@@ -81,7 +82,8 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
       boolean remote)
   {
     super(name, description);
-    _localClassPath = new FilePath(new File(DEFAULT_CLASSPATH));
+    _localClassPath = new FilePath(new File(
+        DynamicParameterConfiguration.INSTANCE.getClassPathDirectory()));
     _remoteClassPath = DEFAULT_REMOTE_CLASSPATH;
     _script = script;
     _remote = remote;
@@ -149,7 +151,13 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     if (isRemote())
     {
       Label label = findCurrentProjectLabel();
-      if (label != null)
+      if (label == null)
+      {
+        logger.warning(String.format(
+            "No label is assigned to project; script for parameter '%s' will be executed on master",
+            getName()));
+      }
+      else
       {
         return executeAt(label);
       }
