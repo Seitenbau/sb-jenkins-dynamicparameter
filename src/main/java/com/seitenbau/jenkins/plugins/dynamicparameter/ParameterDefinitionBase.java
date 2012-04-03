@@ -159,7 +159,11 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
       }
       else
       {
-        return executeAt(label);
+        Object value = executeAt(label);
+        if (value != null)
+        {
+          return value;
+        }
       }
     }
     return execute(getScript(), getLocalClassPath());
