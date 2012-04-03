@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
@@ -11,7 +10,7 @@
   <groupId>com.seitenbau.jenkins.plugins</groupId>
   <artifactId>dynamicparameter</artifactId>
   <packaging>hpi</packaging>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.1.1</version>
 
   <name>Jenkins Dynamic Parameter Plug-in</name>
   <description>
@@ -77,12 +76,12 @@
                 <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <fileset-config file-format-version="1.2.0" simple-config="true">
   <local-check-config name="sb-checks" location="/src/test/checkstyle/sb-checks5.xml" type="project" description="">
-    <additional-data name="protect-config-file" value="false"/>
+    <additional-data name="protect-config-file" value="false" />
   </local-check-config>
   <fileset name="all" enabled="true" check-config-name="sb-checks" local="true">
-    <file-match-pattern match-pattern="." include-pattern="true"/>
+    <file-match-pattern match-pattern="." include-pattern="true" />
   </fileset>
-  <filter name="NonSrcDirs" enabled="true"/>
+  <filter name="NonSrcDirs" enabled="true" />
 </fileset-config>
 ]]>
               </content>
