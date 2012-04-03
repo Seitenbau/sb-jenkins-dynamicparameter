@@ -107,7 +107,15 @@ public enum DynamicParameterConfiguration
 
     private static File getHomeDirectory()
     {
-      return new File(Hudson.getInstance().getRootDir(), HOME_DIR);
+      Hudson hudson = Hudson.getInstance();
+      if (hudson == null)
+      {
+        return new File(HOME_DIR);
+      }
+      else
+      {
+        return new File(hudson.getRootDir(), HOME_DIR);
+      }
     }
 
     private static File getDefaultClassPathDirectory()
