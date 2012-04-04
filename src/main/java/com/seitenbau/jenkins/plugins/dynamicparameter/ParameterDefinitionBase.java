@@ -16,7 +16,6 @@
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
@@ -150,20 +149,10 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     if (isRemote())
     {
-      Label label = findCurrentProjectLabel();
-      if (label == null)
+      final VirtualChannel channel = findActiveChannel();
+      if (channel != null)
       {
-        logger.warning(String.format(
-            "No label is assigned to project; script for parameter '%s' will be executed on master",
-            getName()));
-      }
-      else
-      {
-        Object value = executeAt(label);
-        if (value != null)
-        {
-          return value;
-        }
+        return executeAt(channel);
       }
     }
     return execute(getScript(), getLocalClassPath());
@@ -212,24 +201,6 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
-   * Execute the script at one of the nodes with the given label.
-   * @param label node label
-   * @return result from the script
-   */
-  private Object executeAt(Label label)
-  {
-    final VirtualChannel channel = findActiveChannel(label);
-    if (channel == null)
-    {
-      logger.warning(
-          String.format("Cannot find a node of the label '%s' where to execute the script",
-          label.getDisplayName()));
-      return null;
-    }
-    return executeAt(channel);
-  }
-
-  /**
    * Copy the local classpath directory to a remote node.
    * @param channel node channel
    * @return remote classpath
@@ -268,12 +239,21 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
-   * Find an active node channel of a given label.
-   * @param label label which nodes to search
+   * Find an active node channel for the label of the current project.
    * @return active node channel or {@code null} if none found
    */
-  private static VirtualChannel findActiveChannel(Label label)
+  private VirtualChannel findActiveChannel()
   {
+    Label label = findCurrentProjectLabel();
+
+    if (label == null)
+    {
+      logger.warning(String.format(
+          "No label is assigned to project; script for parameter '%s' will be executed on master",
+          getName()));
+      return null;
+    }
+
     Iterator<Node> iterator = label.getNodes().iterator();
     while (iterator.hasNext())
     {
@@ -283,6 +263,10 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
         return channel;
       }
     }
+
+    logger.warning(String.format(
+        "Cannot find an active node of the label '%s' where to execute the script",
+        label.getDisplayName()));
     return null;
   }
 
