@@ -15,7 +15,17 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
-import java.io.File;
+import groovy.lang.GroovyShell;
+import hudson.FilePath;
+import hudson.model.AbstractProject;
+import hudson.model.Hudson;
+import hudson.model.Label;
+import hudson.model.Node;
+import hudson.model.ParameterDefinition;
+import hudson.model.ParametersDefinitionProperty;
+import hudson.remoting.Callable;
+import hudson.remoting.VirtualChannel;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
@@ -27,17 +37,6 @@ import java.util.logging.Logger;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
-
-import groovy.lang.GroovyShell;
-import hudson.FilePath;
-import hudson.model.AbstractProject;
-import hudson.model.Hudson;
-import hudson.model.Label;
-import hudson.model.Node;
-import hudson.model.ParameterDefinition;
-import hudson.model.ParametersDefinitionProperty;
-import hudson.remoting.Callable;
-import hudson.remoting.VirtualChannel;
 
 /** Base class for all dynamic parameters. */
 public abstract class ParameterDefinitionBase extends ParameterDefinition
@@ -81,8 +80,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
       boolean remote)
   {
     super(name, description);
-    _localClassPath = new FilePath(new File(
-        DynamicParameterConfiguration.INSTANCE.getClassPathDirectory()));
+    _localClassPath = new FilePath(DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile());
     _remoteClassPath = DEFAULT_REMOTE_CLASSPATH;
     _script = script;
     _remote = remote;

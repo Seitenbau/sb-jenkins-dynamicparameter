@@ -13,14 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-  xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
-  xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
-  <l:layout permission="${app.READ}" norefresh="true">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+  xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+
+  <l:layout permission="${it.ADMINISTER}" norefresh="true" title="${%title}">
 
 	  <l:side-panel>
 	    <l:tasks>
-	      <l:task icon="images/24x24/setting.gif" href="${rootURL}/manage" title="${%Manage Jenkins}" permission="${app.ADMINISTER}" />
+	      <l:task icon="images/24x24/setting.png" href="${rootURL}/manage" title="${%Manage Jenkins}"
+          permission="${app.ADMINISTER}" />
       </l:tasks>
     </l:side-panel>
 
@@ -37,7 +38,7 @@ limitations under the License.
 
       <f:form method="post" action="setClassPathDir">
         <f:block>
-		      <f:textbox name="classPathDir" value="${it.classPathDir}" />
+		      <f:textbox name="baseDirectory" value="${it.baseDirectory}" />
 	      </f:block>
         <f:block>
           <f:submit value="${%save}" />
@@ -49,7 +50,12 @@ limitations under the License.
 
       <f:form method="post" action="uploadFile" name="uploadFile" enctype="multipart/form-data">
         <f:block>
-          <input type="file" name="file" class="setting-input" />
+          <f:entry title="${%classPathDirectory}">
+            <f:textbox name="classPathDirectory" value="${it.lastClassPathDirectory}"/>
+          </f:entry>
+          <f:entry title="${%classFile}">
+            <input type="file" name="file" class="setting-input" />
+          </f:entry>
         </f:block>
         <f:block>
           <f:submit value="${%upload}" />
@@ -59,24 +65,43 @@ limitations under the License.
 
       <h3><j:out value="${%uploadedFiles}"/></h3>
 
-      <table class="pane">
-        <j:forEach var="file" items="${it.uploadedFiles}">
-          <tr style="border-top: 0px;">
-            <td class="pane" width="86">
-              <a href="downloadFile?file=${file}">
-                <img width="16" height="16" title="${%downloadFile} ${file}" src="${imagesURL}/16x16/document_edit.gif" />
-              </a>
-              <j:out value=" " />
-              <a href="deleteFile?file=${file}" onclick="return confirmDelete('${file}')">
-                <img width="16" height="16" title="${%deleteFile} ${file}" src="${imagesURL}/16x16/edit-delete.gif" />
-              </a>
-            </td>
-            <td class="pane">
-              <j:out value="${file}" />
-            </td>
-          </tr>
-        </j:forEach>
-      </table>
+      <j:forEach var="dir" items="${it.classPathDirectories}">
+	      <table class="pane">
+
+          <thead>
+						<tr style="border-top: 0px;">
+						  <th class="pane" width="86">
+	              <img width="16" height="16" title="${%classPathDirectory}" src="${imagesURL}/16x16/folder.png" />
+                <j:out value=" " />
+						    <a href="deleteFile?file=${dir}" onclick="return confirmDelete('${dir}')">
+	                <img width="16" height="16" title="${%deleteFile} ${dir}" src="${imagesURL}/16x16/edit-delete.png" />
+	              </a>
+						  </th>
+						  <th class="pane" style="text-align: left;">
+	              <j:out value="${dir}" />
+						  </th>
+						</tr>
+					</thead>
+
+	        <j:forEach var="file" items="${it.getUploadedFiles(dir)}">
+	          <tr style="border-top: 0px;">
+	            <td class="pane" width="86" style="text-align: center;">
+	              <a href="downloadFile?file=${dir}/${file}">
+	                <img width="16" height="16" title="${%downloadFile} ${file}" src="${imagesURL}/16x16/document_edit.png" />
+	              </a>
+	              <j:out value=" " />
+	              <a href="deleteFile?file=${dir}/${file}" onclick="return confirmDelete('${file}')">
+	                <img width="16" height="16" title="${%deleteFile} ${file}" src="${imagesURL}/16x16/edit-delete.png" />
+	              </a>
+	            </td>
+	            <td class="pane">
+	              <j:out value="${file}" />
+	            </td>
+	          </tr>
+	        </j:forEach>
+
+        </table>
+      </j:forEach>
 
       <script>
 function confirmDelete(name) {

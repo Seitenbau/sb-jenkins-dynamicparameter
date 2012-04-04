@@ -21,22 +21,32 @@ public enum DynamicParameterConfiguration
   private final transient ConfigurationImpl config = ConfigurationImpl.load();
 
   /**
-   * Get the class path directory.
-   * @return absolute path to the class path directory
+   * Get the base directory as instance of {@link File}.
+   * @return base directory
    */
-  public String getClassPathDirectory()
+  public File getBaseDirectoryFile()
   {
-    return config.getClassPathDirectory();
+    return config.getBaseDirectory();
   }
 
   /**
-   * Set a new class path directory.
-   * @param newClassPathDirectory new directory path
+   * Get the base directory.
+   * @return canonical path to the base directory
+   * @throws IOException if path can not be resolved
+   */
+  public String getBaseDirectory() throws IOException
+  {
+    return config.getBaseDirectory().getCanonicalPath();
+  }
+
+  /**
+   * Set a new base directory.
+   * @param newBaseDirectory new directory path
    * @throws IOException if configuration cannot be saved
    */
-  public void setClassPathDirectory(String newClassPathDirectory) throws IOException
+  public void setBaseDirectory(String newBaseDirectory) throws IOException
   {
-    config.setClassPathDirectory(newClassPathDirectory);
+    config.setBaseDirectory(newBaseDirectory);
   }
 
   private static final class ConfigurationImpl implements Saveable
@@ -45,24 +55,23 @@ public enum DynamicParameterConfiguration
 
     private static final String HOME_DIR = "dynamic_parameter";
 
-    private static final String DEFAULT_CLASSPATH_DIR = "classpath";
+    private static final String DEFAULT_BASE_DIR = "classpath";
 
-    private String classPathDirectory;
+    private File baseDirectory;
 
     private ConfigurationImpl()
     {
-      classPathDirectory = getDefaultClassPathDirectory().getAbsolutePath();
+      baseDirectory = getDefaultBaseDirectory();
     }
 
-    public String getClassPathDirectory()
+    public File getBaseDirectory()
     {
-      return classPathDirectory;
+      return baseDirectory;
     }
 
-    public void setClassPathDirectory(String newClassPathDirectory) throws IOException
+    public void setBaseDirectory(String newBaseDirectory) throws IOException
     {
-      File newDirectory = new File(newClassPathDirectory);
-      classPathDirectory = newDirectory.getAbsolutePath();
+      baseDirectory = new File(newBaseDirectory);
       save();
     }
 
@@ -118,9 +127,9 @@ public enum DynamicParameterConfiguration
       }
     }
 
-    private static File getDefaultClassPathDirectory()
+    private static File getDefaultBaseDirectory()
     {
-      return new File(getHomeDirectory(), DEFAULT_CLASSPATH_DIR);
+      return new File(getHomeDirectory(), DEFAULT_BASE_DIR);
     }
 
   }
