@@ -13,16 +13,15 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.io.FileSystemUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.tools.ant.types.resources.comparators.FileSystem;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+
+import com.seitenbau.jenkins.plugins.dynamicparameter.util.FileUtils;
 
 /** Plugin configuration. */
 @Extension
@@ -253,7 +252,7 @@ public class DynamicParameterManagement extends ManagementLink
     }
 
     String canonicalFilePath = file.getCanonicalPath();
-    if (isDescendant(basePath, canonicalFilePath))
+    if (FileUtils.isDescendant(basePath, canonicalFilePath))
     {
       return file;
     }
@@ -269,29 +268,6 @@ public class DynamicParameterManagement extends ManagementLink
       File rebasedFile = new File(basePath, fileName);
       return rebasedFile;
     }
-  }
-
-  private static boolean isDescendant(String root, String descendant)
-  {
-    String rootPath = root;
-    String descendantPath = descendant;
-    if(isWindows())
-    {
-      rootPath = root.toUpperCase();
-      descendantPath = descendant.toUpperCase();
-    }
-
-    if (descendantPath.equals(rootPath) || !descendantPath.startsWith(rootPath))
-    {
-      return false;
-    }
-
-    return true;
-  }
-
-  private static boolean isWindows()
-  {
-    return File.separatorChar == '\\';
   }
 
 }

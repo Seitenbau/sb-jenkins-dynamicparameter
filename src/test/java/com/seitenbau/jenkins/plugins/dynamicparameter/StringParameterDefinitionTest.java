@@ -7,9 +7,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import hudson.model.ParameterValue;
 import hudson.model.StringParameterValue;
-
 import net.sf.json.JSONObject;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.stapler.StaplerRequest;
@@ -29,7 +29,8 @@ public class StringParameterDefinitionTest
   @Before
   public final void setUp()
   {
-    stringParameterDefinition = new StringParameterDefinition("test", SCRIPT, "desc", null, false);
+    stringParameterDefinition = new StringParameterDefinition("test", SCRIPT, "desc", null, false,
+        StringUtils.EMPTY);
   }
 
   /** Test for {@link StringParameterDefinition#getDefaultValue()}. */

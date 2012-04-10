@@ -32,6 +32,7 @@ import java.util.List;
 
 import net.sf.json.JSONObject;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.stapler.StaplerRequest;
@@ -76,7 +77,7 @@ public class ChoiceParameterDefinitionTest
   {
     ChoiceParameterDefinitionParameter parameter = choiceParameterBuilder.build();
     return new ChoiceParameterDefinition(parameter.getName(), parameter.getScript(),
-        parameter.getDescription(), parameter.getUuid(), parameter.isRemote());
+        parameter.getDescription(), parameter.getUuid(), parameter.isRemote(), StringUtils.EMPTY);
   }
 
   /**

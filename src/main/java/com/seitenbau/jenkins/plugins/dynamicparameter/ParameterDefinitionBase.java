@@ -18,6 +18,7 @@ package com.seitenbau.jenkins.plugins.dynamicparameter;
 import groovy.lang.GroovyShell;
 import hudson.FilePath;
 import hudson.model.AbstractProject;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.Hudson;
 import hudson.model.Label;
 import hudson.model.Node;
@@ -26,7 +27,9 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -34,9 +37,11 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
+import org.kohsuke.stapler.QueryParameter;
 
 /** Base class for all dynamic parameters. */
 public abstract class ParameterDefinitionBase extends ParameterDefinition
@@ -44,11 +49,12 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   /** Serial version UID. */
   private static final long serialVersionUID = 8640419054353526544L;
 
-  /** Class path. */
-  public static final String DEFAULT_CLASSPATH = "dynamic_parameter_classpath";
-
   /** Class path on remote slaves. */
-  public static final String DEFAULT_REMOTE_CLASSPATH = "dynamic_parameter_classpath";
+  private static final String DEFAULT_REMOTE_CLASSPATH = "dynamic_parameter_classpath";
+
+  private static final char CLASSPATH_DELIMITER = ',';
+
+  private static final String CLASSPATH_SPLITTER = "\\s*+" + CLASSPATH_DELIMITER + "\\s*+";
 
   /** Logger. */
   protected static final Logger logger = Logger.getLogger(ParameterDefinitionBase.class.getName());
@@ -63,10 +69,13 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   private final boolean _remote;
 
   /** Local class path. */
-  private final FilePath _localClassPath;
+  private final FilePath _localBaseDirectory;
 
   /** Remote class path. */
-  private final String _remoteClassPath;
+  private final String _remoteBaseDirectory;
+
+  /** Class path. */
+  private final String _classPath;
 
   /**
    * Constructor.
@@ -77,13 +86,16 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    * @param remote execute the script on a remote node
    */
   protected ParameterDefinitionBase(String name, String script, String description, String uuid,
-      boolean remote)
+      boolean remote, String classPath)
   {
     super(name, description);
-    _localClassPath = new FilePath(DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile());
-    _remoteClassPath = DEFAULT_REMOTE_CLASSPATH;
+
+    _localBaseDirectory = new FilePath(DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile());
+    _remoteBaseDirectory = DEFAULT_REMOTE_CLASSPATH;
+    _classPath = classPath;
     _script = script;
     _remote = remote;
+
     if (StringUtils.length(uuid) == 0)
     {
       _uuid = UUID.randomUUID();
@@ -98,9 +110,9 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    * Local class path directory.
    * @return directory on the local node
    */
-  public final FilePath getLocalClassPath()
+  public final FilePath getLocalBaseDirectory()
   {
-    return _localClassPath;
+    return _localBaseDirectory;
   }
 
   /**
@@ -109,7 +121,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    */
   public final String getRemoteClassPath()
   {
-    return _remoteClassPath;
+    return _remoteBaseDirectory;
   }
 
   /**
@@ -140,6 +152,20 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
+   * Get class paths as a single string.
+   * @return class paths
+   */
+  public final String getClassPath()
+  {
+    return _classPath;
+  }
+
+  public final String[] getClassPathList()
+  {
+    return _classPath.split(CLASSPATH_SPLITTER);
+  }
+
+  /**
    * Execute the script and return the result value.
    * @return result from the script
    */
@@ -153,7 +179,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
         return executeAt(channel);
       }
     }
-    return execute(getScript(), getLocalClassPath());
+    return execute(getScript(), setupLocalClassPaths());
   }
 
   /**
@@ -172,18 +198,23 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   /**
    * Execute the script locally using the given class path.
    * @param script script to execute
-   * @param classPath class path
+   * @param classPaths class paths
    * @return result from the script
    * @throws Exception
    */
-  private static Object execute(String script, FilePath classPath)
+  private static Object execute(String script, FilePath[] classPaths)
   {
     try
     {
       // set class path
+      ArrayList<String> classPathList = new ArrayList<String>(classPaths.length);
       CompilerConfiguration config = new CompilerConfiguration();
-      String classPathString = classPath.absolutize().toURI().toURL().getPath();
-      config.setClasspath(classPathString);
+      for(FilePath path : classPaths)
+      {
+        String classPathString = path.absolutize().toURI().toURL().getPath();
+        classPathList.add(classPathString);
+      }
+      config.setClasspathList(classPathList);
 
       // execute script
       GroovyShell groovyShell = new GroovyShell(config);
@@ -198,21 +229,47 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     }
   }
 
+  private FilePath[] setupLocalClassPaths()
+  {
+    String[] paths = getClassPathList();
+    FilePath[] localClassPaths = new FilePath[paths.length];
+    for (int i = 0; i < localClassPaths.length; i++)
+    {
+      String path = paths[i];
+      FilePath localClassPath = new FilePath(getLocalBaseDirectory(), path);
+      localClassPaths[i] = localClassPath;
+    }
+    return localClassPaths;
+  }
+
   /**
    * Copy the local classpath directory to a remote node.
    * @param channel node channel
-   * @return remote classpath
+   * @return remote classpaths
    * @throws IOException if copy to remote fails
    * @throws InterruptedException if copy to remote fails
    */
-  private FilePath setupRemoteClassPath(VirtualChannel channel) throws IOException,
+  private FilePath[] setupRemoteClassPaths(VirtualChannel channel) throws IOException,
       InterruptedException
   {
     // TODO check if classpath is up-to-date and does not need a new copy
-    FilePath remoteClassPath = new FilePath(channel, getRemoteClassPath());
-    getLocalClassPath().copyRecursiveTo(remoteClassPath);
+    String[] paths = getClassPathList();
+    FilePath[] remoteClassPaths = new FilePath[paths.length];
+    FilePath remoteBaseDirectory = new FilePath(channel, getRemoteClassPath());
 
-    return remoteClassPath;
+    for (int i = 0; i < remoteClassPaths.length; i++)
+    {
+      String path = paths[i];
+
+      FilePath localClassPath = new FilePath(getLocalBaseDirectory(), path);
+      FilePath remoteClassPath = new FilePath(remoteBaseDirectory, path);
+
+      localClassPath.copyRecursiveTo(remoteClassPath);
+
+      remoteClassPaths[i] = remoteClassPath;
+    }
+
+    return remoteClassPaths;
   }
 
   /**
@@ -224,8 +281,8 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     try
     {
-      FilePath remoteClassPath = setupRemoteClassPath(channel);
-      RemoteCall call = new RemoteCall(getScript(), remoteClassPath);
+      FilePath[] remoteClassPaths = setupRemoteClassPaths(channel);
+      RemoteCall call = new RemoteCall(getScript(), remoteClassPaths);
       return channel.call(call);
     }
     catch (Throwable e)
@@ -345,30 +402,73 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
 
     private final String _remoteScript;
 
-    private final FilePath _classPath;
+    private final FilePath[] _classPaths;
 
     /**
      * Constructor.
      * @param script script to execute
-     * @param classPath class path
+     * @param classPaths class paths
      */
-    public RemoteCall(String script, FilePath classPath)
+    public RemoteCall(String script, FilePath[] classPaths)
     {
       _remoteScript = script;
-      _classPath = classPath;
+      _classPaths = classPaths;
     }
 
     @Override
     public Object call()
     {
-      if(_classPath == null)
+      if (_classPaths == null)
       {
         return execute(_remoteScript);
       }
       else
       {
-        return execute(_remoteScript, _classPath);
+        return execute(_remoteScript, _classPaths);
       }
+    }
+
+  }
+
+  /** Base parameter descriptor. */
+  public static class BaseDescriptor extends ParameterDescriptor
+  {
+    /**
+     * Autocomplete class path selection field.
+     * @param value entered value
+     * @return list of candidates
+     */
+    public AutoCompletionCandidates doAutoCompleteClassPath(@QueryParameter String value)
+    {
+      String[] entered = value.toLowerCase().split(CLASSPATH_SPLITTER);
+
+      String prefix;
+      if (entered.length == 0)
+      {
+        prefix = "";
+      }
+      else
+      {
+        prefix = entered[entered.length - 1].toLowerCase();
+      }
+
+      AutoCompletionCandidates c = new AutoCompletionCandidates();
+
+      File baseDirectory = DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile();
+      String[] directories = baseDirectory.list();
+      if(directories != null)
+      {
+        for (String directory : directories)
+        {
+          String lowerCaseDirectory = directory.toLowerCase();
+          if (lowerCaseDirectory.startsWith(prefix)
+              && !ArrayUtils.contains(entered, lowerCaseDirectory))
+          {
+            c.add(directory);
+          }
+        }
+      }
+      return c;
     }
 
   }
