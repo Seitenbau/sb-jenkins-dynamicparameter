@@ -1,4 +1,4 @@
-package com.seitenbau.jenkins.plugins.dynamicparameter;
+package com.seitenbau.jenkins.plugins.dynamicparameter.config;
 
 import java.io.File;
 import java.io.IOException;

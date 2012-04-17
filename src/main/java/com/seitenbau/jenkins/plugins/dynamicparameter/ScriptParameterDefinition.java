@@ -17,25 +17,21 @@ package com.seitenbau.jenkins.plugins.dynamicparameter;
 
 import hudson.FilePath;
 import hudson.model.AutoCompletionCandidates;
-import hudson.model.Label;
-import hudson.model.ParameterDefinition;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
+import com.seitenbau.jenkins.plugins.dynamicparameter.config.DynamicParameterConfiguration;
 import com.seitenbau.jenkins.plugins.dynamicparameter.util.JenkinsUtils;
 
 /** Base class for all dynamic parameters. */
-public abstract class ParameterDefinitionBase extends ParameterDefinition
+public abstract class ScriptParameterDefinition extends BaseParameterDefinition
 {
   /** Serial version UID. */
   private static final long serialVersionUID = 8640419054353526544L;
@@ -49,17 +45,8 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   /** Regular expression to split concatenated class paths. */
   private static final String CLASSPATH_SPLITTER = "\\s*+" + CLASSPATH_DELIMITER + "\\s*+";
 
-  /** Logger. */
-  protected static final Logger logger = Logger.getLogger(ParameterDefinitionBase.class.getName());
-
   /** Script, which generates the parameter value. */
   private final String _script;
-
-  /** UUID identifying the current parameter. */
-  private final UUID _uuid;
-
-  /** Flag showing if the script should be executed remotely. */
-  private final boolean _remote;
 
   /** Local class path. */
   private final FilePath _localBaseDirectory;
@@ -78,25 +65,15 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
    */
-  protected ParameterDefinitionBase(String name, String script, String description, String uuid,
+  protected ScriptParameterDefinition(String name, String script, String description, String uuid,
       boolean remote, String classPath)
   {
-    super(name, description);
+    super(name, description, uuid, remote);
 
     _localBaseDirectory = new FilePath(DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile());
     _remoteBaseDirectory = DEFAULT_REMOTE_CLASSPATH;
     _classPath = classPath;
     _script = script;
-    _remote = remote;
-
-    if (StringUtils.length(uuid) == 0)
-    {
-      _uuid = UUID.randomUUID();
-    }
-    else
-    {
-      _uuid = UUID.fromString(uuid);
-    }
   }
 
   /**
@@ -127,24 +104,6 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
-   * Should the script be executed to on a remote slave?
-   * @return {@code true} if the script should be executed remotely
-   */
-  public final boolean isRemote()
-  {
-    return _remote;
-  }
-
-  /**
-   * Get unique id for this parameter definition.
-   * @return the _uuid
-   */
-  public final UUID getUUID()
-  {
-    return _uuid;
-  }
-
-  /**
    * Get class paths as a single string.
    * @return class paths
    */
@@ -162,37 +121,19 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     return _classPath.split(CLASSPATH_SPLITTER);
   }
 
-  /**
-   * Execute the script and return the result value.
-   * @return result from the script
-   */
-  protected final Object generateValue()
+  @Override
+  protected ClasspathScriptCall prepareLocalCall()
   {
-    if (isRemote())
-    {
-      Label label = JenkinsUtils.findProjectLabel(getUUID());
-      if (label == null)
-      {
-        logger.warning(String.format(
-            "No label is assigned to project; script for parameter '%s' will be executed on master",
-            getName()));
-      }
-      else
-      {
-        VirtualChannel channel = JenkinsUtils.findActiveChannel(label);
-        if (channel == null)
-        {
-          logger.warning(String.format(
-              "Cannot find an active node of the label '%s' where to execute the script",
-              label.getDisplayName()));
-        }
-        else
-        {
-          return executeAt(channel);
-        }
-      }
-    }
-    return JenkinsUtils.execute(getScript(), setupLocalClassPaths());
+    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), setupLocalClassPaths());
+    return call;
+  }
+
+  @Override
+  protected ClasspathScriptCall prepareRemoteCall(VirtualChannel channel) throws IOException,
+      InterruptedException
+  {
+    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), setupRemoteClassPaths(channel));
+    return call;
   }
 
   /**
@@ -213,7 +154,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
-   * Copy the local class path directory to a remote node.
+   * Copy local class path directories to a remote node.
    * @param channel node channel
    * @return remote class paths
    * @throws IOException if copy to remote fails
@@ -243,30 +184,71 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
-   * Execute the script at the given node.
-   * @param channel node channel
-   * @return result from the script
+   * Base parameter descriptor.
    */
-  private Object executeAt(VirtualChannel channel)
+  public static class BaseDescriptor extends ParameterDescriptor
   {
-    try
+    /**
+     * Auto-complete class path selection field.
+     * @param value entered value
+     * @return list of candidates
+     */
+    public AutoCompletionCandidates doAutoCompleteClassPath(@QueryParameter String value)
     {
-      FilePath[] remoteClassPaths = setupRemoteClassPaths(channel);
-      RemoteCall call = new RemoteCall(getScript(), remoteClassPaths);
-      return channel.call(call);
+      String[] entered = splitClassPaths(value);
+
+      String prefix;
+      if (entered.length == 0)
+      {
+        prefix = StringUtils.EMPTY;
+      }
+      else
+      {
+        prefix = entered[entered.length - 1];
+      }
+
+      AutoCompletionCandidates candidates = new AutoCompletionCandidates();
+
+      File baseDirectory = DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile();
+      String[] directories = baseDirectory.list();
+      if(directories != null)
+      {
+        for (String directory : directories)
+        {
+          String lowerCaseDirectory = directory.toLowerCase();
+          if (lowerCaseDirectory.startsWith(prefix)
+              && !ArrayUtils.contains(entered, lowerCaseDirectory))
+          {
+            candidates.add(directory);
+          }
+        }
+      }
+      return candidates;
     }
-    catch (Throwable e)
+
+    /**
+     * Split a string of class paths into separate values.
+     * @param value concatenated class paths
+     * @return an array of parsed values or an empty array
+     */
+    public static String[] splitClassPaths(String value)
     {
-      String msg = String.format("Error during executing script for parameter '%s'", getName());
-      logger.log(Level.SEVERE, msg, e);
+      if (StringUtils.isEmpty(value))
+      {
+        return ArrayUtils.EMPTY_STRING_ARRAY;
+      }
+      else
+      {
+        return value.toLowerCase().split(CLASSPATH_SPLITTER);
+      }
     }
-    return null;
+
   }
 
   /**
    * Remote call implementation.
    */
-  public static final class RemoteCall implements Callable<Object, Throwable>
+  public static final class ClasspathScriptCall implements Callable<Object, Throwable>
   {
     private static final long serialVersionUID = -8281488869664773282L;
 
@@ -279,7 +261,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
      * @param script script to execute
      * @param classPaths class paths
      */
-    public RemoteCall(String script, FilePath[] classPaths)
+    public ClasspathScriptCall(String script, FilePath[] classPaths)
     {
       _remoteScript = script;
       _classPaths = classPaths;
@@ -288,59 +270,8 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     @Override
     public Object call()
     {
-      if (_classPaths == null)
-      {
-        return JenkinsUtils.execute(_remoteScript);
-      }
-      else
-      {
-        return JenkinsUtils.execute(_remoteScript, _classPaths);
-      }
+      return JenkinsUtils.execute(_remoteScript, _classPaths);
     }
 
   }
-
-  /** Base parameter descriptor. */
-  public static class BaseDescriptor extends ParameterDescriptor
-  {
-    /**
-     * Auto-complete class path selection field.
-     * @param value entered value
-     * @return list of candidates
-     */
-    public AutoCompletionCandidates doAutoCompleteClassPath(@QueryParameter String value)
-    {
-      String[] entered = value.toLowerCase().split(CLASSPATH_SPLITTER);
-
-      String prefix;
-      if (entered.length == 0)
-      {
-        prefix = "";
-      }
-      else
-      {
-        prefix = entered[entered.length - 1].toLowerCase();
-      }
-
-      AutoCompletionCandidates c = new AutoCompletionCandidates();
-
-      File baseDirectory = DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile();
-      String[] directories = baseDirectory.list();
-      if(directories != null)
-      {
-        for (String directory : directories)
-        {
-          String lowerCaseDirectory = directory.toLowerCase();
-          if (lowerCaseDirectory.startsWith(prefix)
-              && !ArrayUtils.contains(entered, lowerCaseDirectory))
-          {
-            c.add(directory);
-          }
-        }
-      }
-      return c;
-    }
-
-  }
-
 }
