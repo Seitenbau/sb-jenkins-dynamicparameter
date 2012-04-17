@@ -15,33 +15,24 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
-import groovy.lang.GroovyShell;
 import hudson.FilePath;
-import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
-import hudson.model.Hudson;
 import hudson.model.Label;
-import hudson.model.Node;
 import hudson.model.ParameterDefinition;
-import hudson.model.ParametersDefinitionProperty;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.groovy.control.CompilerConfiguration;
 import org.kohsuke.stapler.QueryParameter;
+
+import com.seitenbau.jenkins.plugins.dynamicparameter.util.JenkinsUtils;
 
 /** Base class for all dynamic parameters. */
 public abstract class ParameterDefinitionBase extends ParameterDefinition
@@ -52,8 +43,10 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   /** Class path on remote slaves. */
   private static final String DEFAULT_REMOTE_CLASSPATH = "dynamic_parameter_classpath";
 
+  /** Class path delimiter symbol. */
   private static final char CLASSPATH_DELIMITER = ',';
 
+  /** Regular expression to split concatenated class paths. */
   private static final String CLASSPATH_SPLITTER = "\\s*+" + CLASSPATH_DELIMITER + "\\s*+";
 
   /** Logger. */
@@ -160,6 +153,10 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     return _classPath;
   }
 
+  /**
+   * Get class paths as a list.
+   * @return class paths
+   */
   public final String[] getClassPathList()
   {
     return _classPath.split(CLASSPATH_SPLITTER);
@@ -173,62 +170,35 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   {
     if (isRemote())
     {
-      final VirtualChannel channel = findActiveChannel();
-      if (channel != null)
+      Label label = JenkinsUtils.findProjectLabel(getUUID());
+      if (label == null)
       {
-        return executeAt(channel);
+        logger.warning(String.format(
+            "No label is assigned to project; script for parameter '%s' will be executed on master",
+            getName()));
+      }
+      else
+      {
+        VirtualChannel channel = JenkinsUtils.findActiveChannel(label);
+        if (channel == null)
+        {
+          logger.warning(String.format(
+              "Cannot find an active node of the label '%s' where to execute the script",
+              label.getDisplayName()));
+        }
+        else
+        {
+          return executeAt(channel);
+        }
       }
     }
-    return execute(getScript(), setupLocalClassPaths());
+    return JenkinsUtils.execute(getScript(), setupLocalClassPaths());
   }
 
   /**
-   * Execute the script locally.
-   * @param script script to execute
-   * @return result from the script
+   * Set up the class path directory on the local node.
+   * @return local class paths
    */
-  private static Object execute(String script)
-  {
-    CompilerConfiguration config = new CompilerConfiguration();
-    GroovyShell groovyShell = new GroovyShell(config);
-    Object evaluate = groovyShell.evaluate(script);
-    return evaluate;
-  }
-
-  /**
-   * Execute the script locally using the given class path.
-   * @param script script to execute
-   * @param classPaths class paths
-   * @return result from the script
-   * @throws Exception
-   */
-  private static Object execute(String script, FilePath[] classPaths)
-  {
-    try
-    {
-      // set class path
-      ArrayList<String> classPathList = new ArrayList<String>(classPaths.length);
-      CompilerConfiguration config = new CompilerConfiguration();
-      for(FilePath path : classPaths)
-      {
-        String classPathString = path.absolutize().toURI().toURL().getPath();
-        classPathList.add(classPathString);
-      }
-      config.setClasspathList(classPathList);
-
-      // execute script
-      GroovyShell groovyShell = new GroovyShell(config);
-      Object evaluate = groovyShell.evaluate(script);
-
-      return evaluate;
-    }
-    catch (Exception e)
-    {
-      logger.log(Level.SEVERE, "Cannot access class path", e);
-      return null;
-    }
-  }
-
   private FilePath[] setupLocalClassPaths()
   {
     String[] paths = getClassPathList();
@@ -243,9 +213,9 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
-   * Copy the local classpath directory to a remote node.
+   * Copy the local class path directory to a remote node.
    * @param channel node channel
-   * @return remote classpaths
+   * @return remote class paths
    * @throws IOException if copy to remote fails
    * @throws InterruptedException if copy to remote fails
    */
@@ -294,106 +264,6 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
-   * Find an active node channel for the label of the current project.
-   * @return active node channel or {@code null} if none found
-   */
-  private VirtualChannel findActiveChannel()
-  {
-    Label label = findCurrentProjectLabel();
-
-    if (label == null)
-    {
-      logger.warning(String.format(
-          "No label is assigned to project; script for parameter '%s' will be executed on master",
-          getName()));
-      return null;
-    }
-
-    Iterator<Node> iterator = label.getNodes().iterator();
-    while (iterator.hasNext())
-    {
-      final VirtualChannel channel = iterator.next().getChannel();
-      if (channel != null)
-      {
-        return channel;
-      }
-    }
-
-    logger.warning(String.format(
-        "Cannot find an active node of the label '%s' where to execute the script",
-        label.getDisplayName()));
-    return null;
-  }
-
-  /**
-   * Find the label assigned to the current project.
-   * @return {@code null} if the label of the current project cannot be found
-   */
-  @SuppressWarnings("rawtypes")
-  private Label findCurrentProjectLabel()
-  {
-    Hudson instance = Hudson.getInstance();
-    if (instance != null)
-    {
-      List<AbstractProject> projects = instance.getItems(AbstractProject.class);
-      for (AbstractProject project : projects)
-      {
-        if (isThisParameterDefintionOf(project))
-        {
-          return project.getAssignedLabel();
-        }
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Returns true if this parameter definition is a definition of the given project.
-   * @param project the project to search for this parameter definition.
-   * @return {@code true} if the project contains this parameter definition.
-   */
-  @SuppressWarnings("rawtypes")
-  private boolean isThisParameterDefintionOf(AbstractProject project)
-  {
-    List<ParameterDefinition> parameterDefinitions = getProjectParameterDefinitions(project);
-    for (ParameterDefinition pd : parameterDefinitions)
-    {
-      if (pd instanceof ParameterDefinitionBase)
-      {
-        ParameterDefinitionBase parameterDefinition = (ParameterDefinitionBase) pd;
-        UUID parameterUUID = parameterDefinition.getUUID();
-        if (ObjectUtils.equals(parameterUUID, this.getUUID()))
-        {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Get the parameter definitions for the given project.
-   * @param project the project for which the parameter definitions should be found
-   * @return parameter definitions or an empty list
-   */
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private static List<ParameterDefinition> getProjectParameterDefinitions(AbstractProject project)
-  {
-    ParametersDefinitionProperty parametersDefinitionProperty =
-        (ParametersDefinitionProperty) project.getProperty(ParametersDefinitionProperty.class);
-    if (parametersDefinitionProperty != null)
-    {
-      List<ParameterDefinition> parameterDefinitions = parametersDefinitionProperty
-          .getParameterDefinitions();
-      if (parameterDefinitions != null)
-      {
-        return parameterDefinitions;
-      }
-    }
-    return Collections.EMPTY_LIST;
-  }
-
-  /**
    * Remote call implementation.
    */
   public static final class RemoteCall implements Callable<Object, Throwable>
@@ -420,11 +290,11 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
     {
       if (_classPaths == null)
       {
-        return execute(_remoteScript);
+        return JenkinsUtils.execute(_remoteScript);
       }
       else
       {
-        return execute(_remoteScript, _classPaths);
+        return JenkinsUtils.execute(_remoteScript, _classPaths);
       }
     }
 
@@ -434,7 +304,7 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   public static class BaseDescriptor extends ParameterDescriptor
   {
     /**
-     * Autocomplete class path selection field.
+     * Auto-complete class path selection field.
      * @param value entered value
      * @return list of candidates
      */
