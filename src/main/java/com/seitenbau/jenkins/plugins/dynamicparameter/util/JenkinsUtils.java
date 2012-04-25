@@ -39,7 +39,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang.ObjectUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 
-import com.seitenbau.jenkins.plugins.dynamicparameter.ParameterDefinitionBase;
+import com.seitenbau.jenkins.plugins.dynamicparameter.ScriptParameterDefinition;
 
 /**
  * Jenkins utility methods.
@@ -187,9 +187,9 @@ public final class JenkinsUtils
     List<ParameterDefinition> parameterDefinitions = getProjectParameterDefinitions(project);
     for (ParameterDefinition pd : parameterDefinitions)
     {
-      if (pd instanceof ParameterDefinitionBase)
+      if (pd instanceof ScriptParameterDefinition)
       {
-        ParameterDefinitionBase parameterDefinition = (ParameterDefinitionBase) pd;
+        ScriptParameterDefinition parameterDefinition = (ScriptParameterDefinition) pd;
         UUID uuid = parameterDefinition.getUUID();
         if (ObjectUtils.equals(parameterUUID, uuid))
         {

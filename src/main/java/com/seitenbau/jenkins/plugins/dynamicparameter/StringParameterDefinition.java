@@ -16,17 +16,12 @@
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
 import hudson.Extension;
-import hudson.model.ParameterValue;
-import hudson.model.StringParameterValue;
-import net.sf.json.JSONObject;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.jvnet.localizer.ResourceBundleHolder;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
 
 /** Text parameter, with dynamically generated default value. */
-public class StringParameterDefinition extends ParameterDefinitionBase
+public class StringParameterDefinition extends ScriptParameterDefinition
 {
   /** Serial version UID. */
   private static final long serialVersionUID = 3162331168133114084L;
@@ -52,37 +47,7 @@ public class StringParameterDefinition extends ParameterDefinitionBase
    */
   public final String getDefaultValue()
   {
-    Object value = generateValue();
-    return ObjectUtils.toString(value, null);
-  }
-
-  @Override
-  public final ParameterValue createValue(StaplerRequest req, JSONObject jo)
-  {
-    StringParameterValue parameterValue = req.bindJSON(StringParameterValue.class, jo);
-    parameterValue.setDescription(getDescription());
-    return parameterValue;
-  }
-
-  @Override
-  public final ParameterValue createValue(StaplerRequest req)
-  {
-    String[] values = req.getParameterValues(getName());
-
-    if (values == null)
-    {
-      return getDefaultParameterValue();
-    }
-    else if (values.length == 1)
-    {
-      return new StringParameterValue(getName(), values[0], getDescription());
-    }
-    else
-    {
-      String msg = String.format("Illegal number of parameter values for '%s': %d", getName(),
-          values.length);
-      throw new IllegalArgumentException(msg);
-    }
+    return getScriptResultAsString();
   }
 
   /** Parameter descriptor. */

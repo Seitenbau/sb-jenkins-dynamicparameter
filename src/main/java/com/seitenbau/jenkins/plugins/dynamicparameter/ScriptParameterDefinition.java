@@ -18,24 +18,22 @@ package com.seitenbau.jenkins.plugins.dynamicparameter;
 import hudson.FilePath;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Label;
-import hudson.model.ParameterDefinition;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
+import com.seitenbau.jenkins.plugins.dynamicparameter.config.DynamicParameterConfiguration;
 import com.seitenbau.jenkins.plugins.dynamicparameter.util.JenkinsUtils;
 
 /** Base class for all dynamic parameters. */
-public abstract class ParameterDefinitionBase extends ParameterDefinition
+public abstract class ScriptParameterDefinition extends BaseParameterDefinition
 {
   /** Serial version UID. */
   private static final long serialVersionUID = 8640419054353526544L;
@@ -50,16 +48,11 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   private static final String CLASSPATH_SPLITTER = "\\s*+" + CLASSPATH_DELIMITER + "\\s*+";
 
   /** Logger. */
-  protected static final Logger logger = Logger.getLogger(ParameterDefinitionBase.class.getName());
+  protected static final Logger logger = Logger.getLogger(ScriptParameterDefinition.class
+      .getName());
 
   /** Script, which generates the parameter value. */
   private final String _script;
-
-  /** UUID identifying the current parameter. */
-  private final UUID _uuid;
-
-  /** Flag showing if the script should be executed remotely. */
-  private final boolean _remote;
 
   /** Local class path. */
   private final FilePath _localBaseDirectory;
@@ -78,25 +71,15 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
    */
-  protected ParameterDefinitionBase(String name, String script, String description, String uuid,
+  protected ScriptParameterDefinition(String name, String script, String description, String uuid,
       boolean remote, String classPath)
   {
-    super(name, description);
+    super(name, description, uuid, remote);
 
     _localBaseDirectory = new FilePath(DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile());
     _remoteBaseDirectory = DEFAULT_REMOTE_CLASSPATH;
     _classPath = classPath;
     _script = script;
-    _remote = remote;
-
-    if (StringUtils.length(uuid) == 0)
-    {
-      _uuid = UUID.randomUUID();
-    }
-    else
-    {
-      _uuid = UUID.fromString(uuid);
-    }
   }
 
   /**
@@ -127,24 +110,6 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
   }
 
   /**
-   * Should the script be executed to on a remote slave?
-   * @return {@code true} if the script should be executed remotely
-   */
-  public final boolean isRemote()
-  {
-    return _remote;
-  }
-
-  /**
-   * Get unique id for this parameter definition.
-   * @return the _uuid
-   */
-  public final UUID getUUID()
-  {
-    return _uuid;
-  }
-
-  /**
    * Get class paths as a single string.
    * @return class paths
    */
@@ -166,31 +131,13 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
    * Execute the script and return the result value.
    * @return result from the script
    */
-  protected final Object generateValue()
+  @Override
+  protected final Object getScriptResult()
   {
+    FilePath[] classPath;
     if (isRemote())
     {
-      Label label = JenkinsUtils.findProjectLabel(getUUID());
-      if (label == null)
-      {
-        logger.warning(String.format(
-            "No label is assigned to project; script for parameter '%s' will be executed on master",
-            getName()));
-      }
-      else
-      {
-        VirtualChannel channel = JenkinsUtils.findActiveChannel(label);
-        if (channel == null)
-        {
-          logger.warning(String.format(
-              "Cannot find an active node of the label '%s' where to execute the script",
-              label.getDisplayName()));
-        }
-        else
-        {
-          return executeAt(channel);
-        }
-      }
+      classPath = setupRemoteClassPaths(channel)
     }
     return JenkinsUtils.execute(getScript(), setupLocalClassPaths());
   }
@@ -261,43 +208,6 @@ public abstract class ParameterDefinitionBase extends ParameterDefinition
       logger.log(Level.SEVERE, msg, e);
     }
     return null;
-  }
-
-  /**
-   * Remote call implementation.
-   */
-  public static final class RemoteCall implements Callable<Object, Throwable>
-  {
-    private static final long serialVersionUID = -8281488869664773282L;
-
-    private final String _remoteScript;
-
-    private final FilePath[] _classPaths;
-
-    /**
-     * Constructor.
-     * @param script script to execute
-     * @param classPaths class paths
-     */
-    public RemoteCall(String script, FilePath[] classPaths)
-    {
-      _remoteScript = script;
-      _classPaths = classPaths;
-    }
-
-    @Override
-    public Object call()
-    {
-      if (_classPaths == null)
-      {
-        return JenkinsUtils.execute(_remoteScript);
-      }
-      else
-      {
-        return JenkinsUtils.execute(_remoteScript, _classPaths);
-      }
-    }
-
   }
 
   /** Base parameter descriptor. */
