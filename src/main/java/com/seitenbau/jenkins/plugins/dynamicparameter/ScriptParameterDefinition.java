@@ -226,7 +226,12 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
       return candidates;
     }
 
-    private static String[] splitClassPaths(String value)
+    /**
+     * Split a string of class paths into separate values.
+     * @param value concatenated class paths
+     * @return an array of parsed values or an empty array
+     */
+    public static String[] splitClassPaths(String value)
     {
       if (StringUtils.isEmpty(value))
       {

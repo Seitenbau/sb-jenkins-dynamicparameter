@@ -32,7 +32,9 @@ public class FileUtils extends org.apache.commons.io.FileUtils
   }
 
   /**
-   * Check if a file is descendant of the given root.
+   * Check if a file is descendant of the given root. The method does not access the file system,
+   * but uses the provided paths to check if the given root is a prefix of the given path;
+   * therefore, the caller MUST take care to make the two paths absolute.
    * @param root root path
    * @param descendant descendant path
    * @return {@code true} if a descendant
@@ -43,8 +45,8 @@ public class FileUtils extends org.apache.commons.io.FileUtils
     String descendantPath = descendant;
     if (isWindows())
     {
-      rootPath = root.toUpperCase();
-      descendantPath = descendant.toUpperCase();
+      rootPath = root.toUpperCase().replace('\\', '/') + '/';
+      descendantPath = descendant.toUpperCase().replace('\\', '/');
     }
 
     if (descendantPath.equals(rootPath) || !descendantPath.startsWith(rootPath))
