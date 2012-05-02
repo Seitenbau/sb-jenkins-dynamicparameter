@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -38,7 +39,10 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
+import org.jenkinsci.plugins.scriptler.config.Script;
+import org.jenkinsci.plugins.scriptler.config.ScriptlerConfiguration;
 
+import com.seitenbau.jenkins.plugins.dynamicparameter.BaseParameterDefinition;
 import com.seitenbau.jenkins.plugins.dynamicparameter.ScriptParameterDefinition;
 
 /**
@@ -134,6 +138,25 @@ public final class JenkinsUtils
   }
 
   /**
+   * Check if the Scriptler plugin is available.
+   * @return {@code true} if Scriptler is installed
+   */
+  public static boolean isScriptlerAvailable()
+  {
+    return JenkinsUtils.isPluginAvailable("scriptler");
+  }
+
+  /**
+   * Get all Scriptler scripts.
+   * @return a set of Scriptler scripts
+   */
+  public static Set<Script> getAllScriptlerScripts()
+  {
+    Set<Script> scripts = ScriptlerConfiguration.getConfiguration().getScripts();
+    return scripts;
+  }
+
+  /**
    * Find an active node channel for the label of the current project.
    * @param label label whose nodes to check
    * @return active node channel or {@code null} if none found
@@ -187,9 +210,9 @@ public final class JenkinsUtils
     List<ParameterDefinition> parameterDefinitions = getProjectParameterDefinitions(project);
     for (ParameterDefinition pd : parameterDefinitions)
     {
-      if (pd instanceof ScriptParameterDefinition)
+      if (pd instanceof BaseParameterDefinition)
       {
-        ScriptParameterDefinition parameterDefinition = (ScriptParameterDefinition) pd;
+        BaseParameterDefinition parameterDefinition = (BaseParameterDefinition) pd;
         UUID uuid = parameterDefinition.getUUID();
         if (ObjectUtils.equals(parameterUUID, uuid))
         {

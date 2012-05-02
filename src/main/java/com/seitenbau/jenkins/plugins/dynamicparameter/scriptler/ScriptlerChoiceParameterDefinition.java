@@ -27,6 +27,8 @@ import org.jenkinsci.plugins.scriptler.config.Script;
 import org.jvnet.localizer.ResourceBundleHolder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import com.seitenbau.jenkins.plugins.dynamicparameter.util.JenkinsUtils;
+
 /** Choice parameter, with dynamically generated list of values. */
 public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefinition
 {
@@ -94,7 +96,7 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
 
     public Set<Script> getScripts()
     {
-      return getAllScriptlerScripts();
+      return JenkinsUtils.getAllScriptlerScripts();
     }
   }
 }

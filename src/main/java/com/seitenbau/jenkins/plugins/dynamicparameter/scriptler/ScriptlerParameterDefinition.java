@@ -15,14 +15,14 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter.scriptler;
 
+import hudson.remoting.Callable;
+import hudson.remoting.VirtualChannel;
+
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.scriptler.config.Parameter;
 import org.jenkinsci.plugins.scriptler.config.Script;
-import org.jenkinsci.plugins.scriptler.config.ScriptlerConfiguration;
 import org.jenkinsci.plugins.scriptler.util.ScriptHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -35,16 +35,21 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
   /** Serial version UID. */
   private static final long serialVersionUID = -8947340128208418404L;
 
-  /** Logger. */
-  protected static final Logger logger = Logger.getLogger(ScriptlerParameterDefinition.class
-      .getName());
-
   /** Scriptler script id. */
   private final String _scriptlerScriptId;
 
   /** Script parameters. */
   private final ScriptParameter[] _parameters;
 
+  /**
+   * Constructor.
+   * @param name parameter name
+   * @param description parameter description
+   * @param uuid UUID of the parameter definition
+   * @param scriptlerScriptId Scriptler script identifier
+   * @param parameters script parameters
+   * @param remote flag showing if the script should be executed remotely
+   */
   protected ScriptlerParameterDefinition(String name, String description, String uuid,
       String scriptlerScriptId, ScriptParameter[] parameters, boolean remote)
   {
@@ -71,26 +76,41 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
     return _parameters;
   }
 
-  /**
-   * Execute the script and return the result value.
-   * @return result from the script
-   */
   @Override
-  protected Object getScriptResult()
+  protected ParameterizedScriptCall prepareLocalCall() throws Exception
+  {
+    return prepareCall();
+  }
+
+  @Override
+  protected ParameterizedScriptCall prepareRemoteCall(VirtualChannel channel) throws Exception
+  {
+    return prepareCall();
+  }
+
+  /**
+   * Prepare a call of the script.
+   * @return call instance
+   * @throws Exception if the script with the given Scriptler identifier does not exist
+   */
+  private ParameterizedScriptCall prepareCall() throws Exception
   {
     String scriptId = getScriptlerScriptId();
     Script script = ScriptHelper.getScript(scriptId, true);
     if (script == null)
     {
-      logger.severe(String.format("No script with Scriplter ID '%s' exists", scriptId));
-      return null;
+      throw new Exception(String.format("No script with Scriplter ID '%s' exists", scriptId));
     }
 
     Map<String, String> parameters = getParametersAsMap();
-
-    return super.generateValue(script.script, parameters);
+    ParameterizedScriptCall call = new ParameterizedScriptCall(script.script, parameters);
+    return call;
   }
 
+  /**
+   * Convert the list of parameters to a map.
+   * @return a {@link Map} with script parameters
+   */
   private Map<String, String> getParametersAsMap()
   {
     ScriptParameter[] parameters = getParameters();
@@ -103,21 +123,8 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
   }
 
   /**
-   * Check if the Scriptler plugin is available.
-   * @return {@code true} if Scriptler is installed
+   * Script parameter which has a data bound constructor.
    */
-  protected static boolean isScriptlerAvailable()
-  {
-    return JenkinsUtils.isPluginAvailable("scriptler");
-  }
-
-  protected static Set<Script> getAllScriptlerScripts()
-  {
-    Set<Script> scripts = ScriptlerConfiguration.getConfiguration().getScripts();
-    return scripts;
-  }
-
-  /** Script parameter which has a data bound constructor. */
   public static final class ScriptParameter extends Parameter
   {
     /** Serial version UID. */
@@ -135,4 +142,33 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
     }
   }
 
+  /**
+   * Remote call implementation.
+   */
+  public static final class ParameterizedScriptCall implements Callable<Object, Throwable>
+  {
+    private static final long serialVersionUID = -8281488869664773282L;
+
+    private final String _remoteScript;
+
+    private final Map<String, String> _parameters;
+
+    /**
+     * Constructor.
+     * @param script script to execute
+     * @param parameters parameters
+     */
+    public ParameterizedScriptCall(String script, Map<String, String> parameters)
+    {
+      _remoteScript = script;
+      _parameters = parameters;
+    }
+
+    @Override
+    public Object call()
+    {
+      return JenkinsUtils.execute(_remoteScript, _parameters);
+    }
+
+  }
 }

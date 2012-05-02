@@ -17,16 +17,14 @@ package com.seitenbau.jenkins.plugins.dynamicparameter;
 
 import hudson.FilePath;
 import hudson.model.AutoCompletionCandidates;
-import hudson.model.Label;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.seitenbau.jenkins.plugins.dynamicparameter.config.DynamicParameterConfiguration;
@@ -46,10 +44,6 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
 
   /** Regular expression to split concatenated class paths. */
   private static final String CLASSPATH_SPLITTER = "\\s*+" + CLASSPATH_DELIMITER + "\\s*+";
-
-  /** Logger. */
-  protected static final Logger logger = Logger.getLogger(ScriptParameterDefinition.class
-      .getName());
 
   /** Script, which generates the parameter value. */
   private final String _script;
@@ -127,19 +121,19 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
     return _classPath.split(CLASSPATH_SPLITTER);
   }
 
-  /**
-   * Execute the script and return the result value.
-   * @return result from the script
-   */
   @Override
-  protected final Object getScriptResult()
+  protected ClasspathScriptCall prepareLocalCall()
   {
-    FilePath[] classPath;
-    if (isRemote())
-    {
-      classPath = setupRemoteClassPaths(channel)
-    }
-    return JenkinsUtils.execute(getScript(), setupLocalClassPaths());
+    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), setupLocalClassPaths());
+    return call;
+  }
+
+  @Override
+  protected ClasspathScriptCall prepareRemoteCall(VirtualChannel channel) throws IOException,
+      InterruptedException
+  {
+    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), setupRemoteClassPaths(channel));
+    return call;
   }
 
   /**
@@ -160,7 +154,7 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
   }
 
   /**
-   * Copy the local class path directory to a remote node.
+   * Copy local class path directories to a remote node.
    * @param channel node channel
    * @return remote class paths
    * @throws IOException if copy to remote fails
@@ -190,27 +184,8 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
   }
 
   /**
-   * Execute the script at the given node.
-   * @param channel node channel
-   * @return result from the script
+   * Base parameter descriptor.
    */
-  private Object executeAt(VirtualChannel channel)
-  {
-    try
-    {
-      FilePath[] remoteClassPaths = setupRemoteClassPaths(channel);
-      RemoteCall call = new RemoteCall(getScript(), remoteClassPaths);
-      return channel.call(call);
-    }
-    catch (Throwable e)
-    {
-      String msg = String.format("Error during executing script for parameter '%s'", getName());
-      logger.log(Level.SEVERE, msg, e);
-    }
-    return null;
-  }
-
-  /** Base parameter descriptor. */
   public static class BaseDescriptor extends ParameterDescriptor
   {
     /**
@@ -220,19 +195,19 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
      */
     public AutoCompletionCandidates doAutoCompleteClassPath(@QueryParameter String value)
     {
-      String[] entered = value.toLowerCase().split(CLASSPATH_SPLITTER);
+      String[] entered = splitClassPaths(value);
 
       String prefix;
       if (entered.length == 0)
       {
-        prefix = "";
+        prefix = StringUtils.EMPTY;
       }
       else
       {
-        prefix = entered[entered.length - 1].toLowerCase();
+        prefix = entered[entered.length - 1];
       }
 
-      AutoCompletionCandidates c = new AutoCompletionCandidates();
+      AutoCompletionCandidates candidates = new AutoCompletionCandidates();
 
       File baseDirectory = DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile();
       String[] directories = baseDirectory.list();
@@ -244,13 +219,54 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
           if (lowerCaseDirectory.startsWith(prefix)
               && !ArrayUtils.contains(entered, lowerCaseDirectory))
           {
-            c.add(directory);
+            candidates.add(directory);
           }
         }
       }
-      return c;
+      return candidates;
+    }
+
+    private static String[] splitClassPaths(String value)
+    {
+      if (StringUtils.isEmpty(value))
+      {
+        return ArrayUtils.EMPTY_STRING_ARRAY;
+      }
+      else
+      {
+        return value.toLowerCase().split(CLASSPATH_SPLITTER);
+      }
     }
 
   }
 
+  /**
+   * Remote call implementation.
+   */
+  public static final class ClasspathScriptCall implements Callable<Object, Throwable>
+  {
+    private static final long serialVersionUID = -8281488869664773282L;
+
+    private final String _remoteScript;
+
+    private final FilePath[] _classPaths;
+
+    /**
+     * Constructor.
+     * @param script script to execute
+     * @param classPaths class paths
+     */
+    public ClasspathScriptCall(String script, FilePath[] classPaths)
+    {
+      _remoteScript = script;
+      _classPaths = classPaths;
+    }
+
+    @Override
+    public Object call()
+    {
+      return JenkinsUtils.execute(_remoteScript, _classPaths);
+    }
+
+  }
 }

@@ -23,6 +23,7 @@ import org.jenkinsci.plugins.scriptler.config.Script;
 import org.jvnet.localizer.ResourceBundleHolder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import com.seitenbau.jenkins.plugins.dynamicparameter.util.JenkinsUtils;
 
 /** Text parameter, with dynamically generated default value. */
 public class ScriptlerStringParameterDefinition extends ScriptlerParameterDefinition
@@ -70,7 +71,7 @@ public class ScriptlerStringParameterDefinition extends ScriptlerParameterDefini
 
     public Set<Script> getScripts()
     {
-      return getAllScriptlerScripts();
+      return JenkinsUtils.getAllScriptlerScripts();
     }
   }
 
