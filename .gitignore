@@ -1,1 +1,6 @@
 /target
+/.settings
+/dynamic_parameter
+/.checkstyle
+/.classpath
+/.project
