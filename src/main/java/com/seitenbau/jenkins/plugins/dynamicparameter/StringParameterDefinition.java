@@ -16,6 +16,8 @@
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
 import hudson.Extension;
+import hudson.model.ParameterValue;
+import hudson.model.StringParameterValue;
 
 import org.jvnet.localizer.ResourceBundleHolder;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -48,6 +50,15 @@ public class StringParameterDefinition extends ScriptParameterDefinition
   public final String getDefaultValue()
   {
     return getScriptResultAsString();
+  }
+  
+  /**
+   * Return default parameter value - used by trigger mechanism.
+   */
+  @Override
+  public ParameterValue getDefaultParameterValue() {
+    StringParameterValue stringParameterValue = new StringParameterValue(getName(), getDefaultValue());
+    return stringParameterValue;
   }
 
   /** Parameter descriptor. */
