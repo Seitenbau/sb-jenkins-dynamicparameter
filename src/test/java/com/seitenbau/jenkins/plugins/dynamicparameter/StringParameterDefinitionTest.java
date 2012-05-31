@@ -26,6 +26,7 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -69,12 +70,22 @@ public class StringParameterDefinitionTest
 
   /** Test for {@link StringParameterDefinition#createValue(StaplerRequest)}. */
   @Test
+  @Ignore
   public final void testCreateValueNull()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
     when(req.getParameterValues(anyString())).thenReturn(null);
 
     assertNull(stringParameterDefinition.createValue(req));
+  }
+  
+  /** Test for {@link StringParameterDefinition#createValue(StaplerRequest)}. */
+  @Test
+  public final void testDefaultValue()
+  {
+	final ParameterValue paramValue = stringParameterDefinition.getDefaultParameterValue();
+
+    assertEquals(SCRIPT_RESULT, ((StringParameterValue) paramValue).value);
   }
 
   /** Test for {@link StringParameterDefinition#createValue(StaplerRequest)}. */
