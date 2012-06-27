@@ -15,6 +15,7 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
+import hudson.cli.CLICommand;
 import hudson.model.ParameterValue;
 import hudson.model.Label;
 import hudson.model.ParameterDefinition;
@@ -22,6 +23,7 @@ import hudson.model.StringParameterValue;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -75,6 +77,18 @@ public abstract class BaseParameterDefinition extends ParameterDefinition
     {
       _uuid = UUID.fromString(uuid);
     }
+  }
+  
+  /**
+   * Return a Parameter value object for a command line parameter.
+   */
+  @Override
+  public ParameterValue createValue(CLICommand command, String value) throws IOException, InterruptedException 
+  {
+    // Is this a fix for the issue
+    // https://github.com/Seitenbau/sb-jenkins-dynamicparameter/issues/3
+    StringParameterValue parameterValue = new StringParameterValue(command.getName(), value);
+    return checkParameterValue(parameterValue);
   }
 
   /**
