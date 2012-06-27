@@ -85,8 +85,7 @@ public abstract class BaseParameterDefinition extends ParameterDefinition
   @Override
   public ParameterValue createValue(CLICommand command, String value) throws IOException, InterruptedException 
   {
-    // Is this a fix for the issue
-    // https://github.com/Seitenbau/sb-jenkins-dynamicparameter/issues/3
+    // Is this a fix for the issue https://github.com/Seitenbau/sb-jenkins-dynamicparameter/issues/3
     StringParameterValue parameterValue = new StringParameterValue(command.getName(), value);
     return checkParameterValue(parameterValue);
   }
