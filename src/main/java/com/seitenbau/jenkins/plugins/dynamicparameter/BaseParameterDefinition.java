@@ -17,8 +17,8 @@ package com.seitenbau.jenkins.plugins.dynamicparameter;
 
 import hudson.cli.CLICommand;
 import hudson.model.ParameterValue;
+import hudson.model.SimpleParameterDefinition;
 import hudson.model.Label;
-import hudson.model.ParameterDefinition;
 import hudson.model.StringParameterValue;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
@@ -42,7 +42,7 @@ import com.seitenbau.jenkins.plugins.dynamicparameter.util.JenkinsUtils;
 /**
  * Base class for all script parameter definition classes.
  */
-public abstract class BaseParameterDefinition extends ParameterDefinition
+public abstract class BaseParameterDefinition extends SimpleParameterDefinition
 {
   /** Serial version UID. */
   private static final long serialVersionUID = -4415132917610378545L;
@@ -83,7 +83,7 @@ public abstract class BaseParameterDefinition extends ParameterDefinition
    * Return a Parameter value object for a command line parameter.
    */
   @Override
-  public ParameterValue createValue(CLICommand command, String value) throws IOException, InterruptedException 
+  public ParameterValue createValue(String value) 
   {
     // Fix for issue https://github.com/Seitenbau/sb-jenkins-dynamicparameter/issues/3
     StringParameterValue parameterValue = new StringParameterValue(this.getName(), value);
@@ -144,14 +144,6 @@ public abstract class BaseParameterDefinition extends ParameterDefinition
     StringParameterValue parameterValue = req.bindJSON(StringParameterValue.class, jo);
     parameterValue.setDescription(getDescription());
     return checkParameterValue(parameterValue);
-  }
-
-  @Override
-  public final ParameterValue createValue(StaplerRequest req)
-  {
-    String name = getName();
-    String[] values = req.getParameterValues(name);
-    return createParameterValue(name, values);
   }
 
   /**
