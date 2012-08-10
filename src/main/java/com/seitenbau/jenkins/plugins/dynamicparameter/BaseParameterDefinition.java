@@ -15,7 +15,6 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
-import hudson.cli.CLICommand;
 import hudson.model.ParameterValue;
 import hudson.model.SimpleParameterDefinition;
 import hudson.model.Label;
@@ -23,7 +22,6 @@ import hudson.model.StringParameterValue;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -86,7 +84,7 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
   public ParameterValue createValue(String value) 
   {
     // Fix for issue https://github.com/Seitenbau/sb-jenkins-dynamicparameter/issues/3
-    StringParameterValue parameterValue = new StringParameterValue(this.getName(), value);
+    StringParameterValue parameterValue = createStringParameterValueFor(this.getName(), value);
     return checkParameterValue(parameterValue);
   }
 
@@ -144,30 +142,6 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
     StringParameterValue parameterValue = req.bindJSON(StringParameterValue.class, jo);
     parameterValue.setDescription(getDescription());
     return checkParameterValue(parameterValue);
-  }
-
-  /**
-   * Create a parameter value instance with the given name and values.
-   * @param name parameter name
-   * @param values parameter values
-   * @return parameter value instance
-   */
-  private ParameterValue createParameterValue(String name, String[] values)
-  {
-    if (values == null)
-    {
-      return getDefaultParameterValue();
-    }
-    else if (values.length == 1)
-    {
-      StringParameterValue parameterValue = createStringParameterValueFor(name, values[0]);
-      return checkParameterValue(parameterValue);
-    }
-    else
-    {
-      throw new IllegalArgumentException(String.format(
-          "Illegal number of parameter values for '%s': %d", getName(), values.length));
-    }
   }
 
   /**
