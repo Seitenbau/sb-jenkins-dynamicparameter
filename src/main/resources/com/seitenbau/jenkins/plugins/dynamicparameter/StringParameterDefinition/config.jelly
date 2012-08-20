@@ -31,4 +31,7 @@ limitations under the License.
   <f:entry title="${%Description}" help="/help/parameter/description.html">
     <f:textarea name="parameter.description" value="${instance.description}" />
   </f:entry>
+  <f:entry title="${%Readonly Input Field}" field="readonlyInputField">
+    <f:checkbox name="parameter.readonlyInputField" checked="${instance.readonlyInputField}" />
+  </f:entry>
 </j:jelly>

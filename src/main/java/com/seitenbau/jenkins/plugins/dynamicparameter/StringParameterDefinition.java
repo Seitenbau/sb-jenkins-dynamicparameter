@@ -27,6 +27,8 @@ public class StringParameterDefinition extends ScriptParameterDefinition
 {
   /** Serial version UID. */
   private static final long serialVersionUID = 3162331168133114084L;
+  
+  private final boolean readonlyInputField;
 
   /**
    * Constructor.
@@ -35,13 +37,25 @@ public class StringParameterDefinition extends ScriptParameterDefinition
    * @param description parameter description
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
+   * @param classPath the class path description
    */
-  @DataBoundConstructor
   public StringParameterDefinition(String name, String script, String description, String uuid,
       boolean remote, String classPath)
   {
-    super(name, script, description, uuid, remote, classPath);
+    this(name, script, description, uuid, remote, false, classPath);
   }
+  
+  /**
+   * TODO: JavaDoc
+   */
+  @DataBoundConstructor
+  public StringParameterDefinition(String name, String script, String description, String uuid,
+      boolean remote, boolean readonlyInputField, String classPath)
+  {
+    super(name, script, description, uuid, remote, classPath);
+    this.readonlyInputField = readonlyInputField;
+  }
+  
 
   /**
    * Execute the script and return the default value for this parameter.
@@ -57,8 +71,13 @@ public class StringParameterDefinition extends ScriptParameterDefinition
    */
   @Override
   public ParameterValue getDefaultParameterValue() {
-    StringParameterValue stringParameterValue = new StringParameterValue(getName(), getDefaultValue());
-    return stringParameterValue;
+     StringParameterValue stringParameterValue = new StringParameterValue(getName(), getDefaultValue());
+     return stringParameterValue;
+  }
+
+  public final boolean isReadonlyInputField() 
+  {
+    return readonlyInputField;
   }
 
   /** Parameter descriptor. */
@@ -73,4 +92,5 @@ public class StringParameterDefinition extends ScriptParameterDefinition
       return ResourceBundleHolder.get(StringParameterDefinition.class).format(DISPLAY_NAME);
     }
   }
+  
 }
