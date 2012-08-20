@@ -44,12 +44,14 @@ public class StringParameterDefinition extends ScriptParameterDefinition
   }
   
   /**
-   * TODO: JavaDoc
+   * Constructor with the parameter which are injected by the jenkins runtime.
+   * 
    * @param name parameter name
    * @param script script, which generates the parameter value
    * @param description parameter description
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
+   * @param readonlyInputField should the input field marked as read only true / false
    * @param classPath the class path description
    */
   @DataBoundConstructor
