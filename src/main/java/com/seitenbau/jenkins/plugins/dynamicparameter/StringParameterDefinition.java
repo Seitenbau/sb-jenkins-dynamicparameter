@@ -31,14 +31,12 @@ public class StringParameterDefinition extends ScriptParameterDefinition
   private final boolean readonlyInputField;
 
   /**
-   * Constructor.
-   * @param name parameter name
-   * @param script script, which generates the parameter value
-   * @param description parameter description
-   * @param uuid identifier (optional)
-   * @param remote execute the script on a remote node
-   * @param classPath the class path description
+   * Constructor is deprecated use instead the constructor with the read only parameter.
+   * Only some unit tests should depend on this constructor.
+   * 
+   * Will be removed in the future.
    */
+  @Deprecated
   public StringParameterDefinition(String name, String script, String description, String uuid,
       boolean remote, String classPath)
   {
@@ -47,6 +45,12 @@ public class StringParameterDefinition extends ScriptParameterDefinition
   
   /**
    * TODO: JavaDoc
+   * @param name parameter name
+   * @param script script, which generates the parameter value
+   * @param description parameter description
+   * @param uuid identifier (optional)
+   * @param remote execute the script on a remote node
+   * @param classPath the class path description
    */
   @DataBoundConstructor
   public StringParameterDefinition(String name, String script, String description, String uuid,
