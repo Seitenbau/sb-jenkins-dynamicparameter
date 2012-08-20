@@ -31,7 +31,16 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
 {
   /** Serial version UID. */
   private static final long serialVersionUID = 5454277528808586236L;
-
+  
+  private final boolean readonlyInputField;
+ 
+  @Deprecated 
+  public ChoiceParameterDefinition(String name, String script, String description, String uuid,
+      boolean remote, String classPath)
+  {
+    this(name, script, description, uuid, remote, false, classPath);
+  }
+  
   /**
    * Constructor.
    * @param name parameter name
@@ -42,9 +51,10 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
    */
   @DataBoundConstructor
   public ChoiceParameterDefinition(String name, String script, String description, String uuid,
-      boolean remote, String classPath)
+          boolean remote, boolean readonlyInputField, String classPath)
   {
     super(name, script, description, uuid, remote, classPath);
+    this.readonlyInputField = readonlyInputField;
   }
 
   /**
@@ -95,6 +105,11 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
       }
     }
     throw new IllegalArgumentException("Illegal choice: " + actualValue);
+  }
+
+  public boolean isReadonlyInputField() 
+  {
+    return readonlyInputField;
   }
 
   /** Parameter descriptor. */
