@@ -23,6 +23,13 @@ $ mvn install
 
 which will create the installable plugin archive target/dynamicparameter.hpi.
 
+How to test and run?
+--------------------
+
+The jenkins plugin can be run by the maven goal:
+
+$ mvn hpi:run
+
 Authors
 -------
 
