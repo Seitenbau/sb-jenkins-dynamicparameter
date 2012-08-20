@@ -10,7 +10,7 @@
   <groupId>com.seitenbau.jenkins.plugins</groupId>
   <artifactId>dynamicparameter</artifactId>
   <packaging>hpi</packaging>
-  <version>0.1.2-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
 
   <name>Jenkins Dynamic Parameter Plug-in</name>
   <description>
