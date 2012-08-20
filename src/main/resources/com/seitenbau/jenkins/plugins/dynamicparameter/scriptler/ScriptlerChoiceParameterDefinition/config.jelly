@@ -25,6 +25,9 @@ limitations under the License.
   <f:entry title="${%Remote Script}" field="remoteScript">
     <f:checkbox name="parameter.remote" checked="${instance.remote}" />
   </f:entry>
+  <f:entry title="${%Readonly Input Field}" field="readonlyInputField">
+    <f:checkbox name="parameter.readonlyInputField" checked="${instance.readonlyInputField}" />
+  </f:entry>
 
   <!-- Scriptler script and parameters -->
   <st:once>

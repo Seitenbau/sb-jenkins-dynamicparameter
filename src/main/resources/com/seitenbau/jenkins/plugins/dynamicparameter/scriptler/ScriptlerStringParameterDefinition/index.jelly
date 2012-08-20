@@ -19,7 +19,12 @@ limitations under the License.
   <f:entry title="${it.name}" description="${it.description}">
     <div name="parameter" description="${it.description}">
       <input type="hidden" name="name" value="${it.name}" />
-      <f:textbox name="value" value="${it.defaultValue}" />
+      <j:if test="${it.readonlyInputField}">
+        <f:textbox name="value" value="${it.defaultValue}" readonly="readonly" disabled="disabled"/>
+      </j:if>
+      <j:if test="${!it.readonlyInputField}">
+        <f:textbox name="value" value="${it.defaultValue}" />
+      </j:if>
       <!--<f:textbox name="value" />-->
     </div>
   </f:entry>

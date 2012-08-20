@@ -36,6 +36,8 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
   /** Serial version UID. */
   private static final long serialVersionUID = -5751222508337683456L;
 
+  private final boolean readonlyInputField;
+
   /**
    * Constructor.
    * @param name parameter name
@@ -47,9 +49,10 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
    */
   @DataBoundConstructor
   public ScriptlerChoiceParameterDefinition(String name, String description, String uuid,
-      String scriptlerScriptId, ScriptParameter[] parameters, boolean remote)
+      String scriptlerScriptId, ScriptParameter[] parameters, boolean remote, boolean readonlyInputField)
   {
     super(name, description, uuid, scriptlerScriptId, parameters, remote);
+    this.readonlyInputField = readonlyInputField;
   }
 
   /**
@@ -61,10 +64,10 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
     Object firstElement = null;
     // Ensure list does exist and is not empty! Otherwise return null
     if (getChoices() != null && getChoices().size() > 0) {
-    	firstElement = getChoices().get(0);
+        firstElement = getChoices().get(0);
     }
     
-	StringParameterValue stringParameterValue = new StringParameterValue(getName(), ObjectUtils.toString(firstElement, null));
+    StringParameterValue stringParameterValue = new StringParameterValue(getName(), ObjectUtils.toString(firstElement, null));
     return stringParameterValue;
   }
   
@@ -96,6 +99,11 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
       }
     }
     throw new IllegalArgumentException("Illegal choice: " + actualValue);
+  }
+
+  public boolean isReadonlyInputField() 
+  {
+    return readonlyInputField;
   }
 
   /** Parameter descriptor. */

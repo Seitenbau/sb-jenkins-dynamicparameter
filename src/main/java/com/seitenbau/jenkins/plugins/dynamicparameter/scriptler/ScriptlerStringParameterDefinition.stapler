@@ -1,1 +1,1 @@
-constructor=name,description,uuid,scriptlerScriptId,parameters,remote
+constructor=name,description,uuid,scriptlerScriptId,parameters,remote,readonlyInputField
