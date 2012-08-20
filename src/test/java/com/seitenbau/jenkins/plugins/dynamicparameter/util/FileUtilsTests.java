@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.seitenbau.jenkins.plugins.dynamicparameter;
+package com.seitenbau.jenkins.plugins.dynamicparameter.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.seitenbau.jenkins.plugins.dynamicparameter.util.FileUtils;
@@ -28,12 +32,29 @@ import com.seitenbau.jenkins.plugins.dynamicparameter.util.FileUtils;
  */
 public class FileUtilsTests
 {
+ 
+  char tmpSeparatorChar;
+    
+  @Before
+  public void setup() 
+  {
+      tmpSeparatorChar = FileUtils.separatorChar;
+      FileUtils.separatorChar = '\\';
+  }
+  
+  @After
+  public void tearDown()
+  {
+      FileUtils.separatorChar = tmpSeparatorChar;
+  }
+    
   /**
    * Test for {@link FileUtils#isWindows()}.
    */
   @Test
   public void testIsWindows()
   {
+    FileUtils.separatorChar = tmpSeparatorChar;
     String osName = System.getProperty("os.name");
     boolean isWindows = osName.toLowerCase().contains("windows");
     assertEquals(isWindows, FileUtils.isWindows());
@@ -49,8 +70,7 @@ public class FileUtilsTests
     assertTrue(FileUtils.isDescendant("root", "root/dir2/dir2/dir3"));
     assertTrue(FileUtils.isDescendant("\\root", "\\root\\dir1"));
     assertTrue(FileUtils.isDescendant("root", "root\\dir2\\dir2\\dir3"));
-    // Issue https://github.com/Seitenbau/sb-jenkins-dynamicparameter/issues/7
-    // assertFalse(FileUtils.isDescendant("root", "root1"));
+    assertFalse(FileUtils.isDescendant("root", "root1"));
     assertFalse(FileUtils.isDescendant("root", "root"));
   }
 }

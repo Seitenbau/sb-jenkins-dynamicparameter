@@ -22,15 +22,18 @@ import java.io.File;
  */
 public class FileUtils extends org.apache.commons.io.FileUtils
 {
+    
+   static char separatorChar = File.separatorChar;
+    
   /**
    * Check if the current system is windows.
    * @return {@code true} if file system delimiter is backslash
    */
   public static boolean isWindows()
   {
-    return File.separatorChar == '\\';
+    return separatorChar == '\\';
   }
-
+  
   /**
    * Check if a file is descendant of the given root. The method does not access the file system,
    * but uses the provided paths to check if the given root is a prefix of the given path;
@@ -48,12 +51,12 @@ public class FileUtils extends org.apache.commons.io.FileUtils
       rootPath = root.toUpperCase().replace('\\', '/') + '/';
       descendantPath = descendant.toUpperCase().replace('\\', '/');
     }
-
-    if (descendantPath.equals(rootPath) || !descendantPath.startsWith(rootPath))
+    if (descendantPath.equals(rootPath) 
+            || !descendantPath.startsWith(rootPath) 
+            || !descendantPath.contains("/"))
     {
       return false;
     }
-
     return true;
   }
 }
