@@ -30,7 +30,7 @@ import com.seitenbau.jenkins.plugins.dynamicparameter.util.FileUtils;
 /**
  * Tests for {@link FileUtils}.
  */
-public class FileUtilsTests
+public class FileUtilsTest
 {
  
   char tmpSeparatorChar;
