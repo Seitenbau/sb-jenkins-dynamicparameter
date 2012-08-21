@@ -13,6 +13,9 @@ choice (drop-down) parameter. If the parameter is a text-field, the
 corresponding script must return a single value. If the parameter is a choice
 parameter, then the script must resturn a list of values.
 
+Groovy scripts for a parameter value can be defined by using the Jenkins Scriptler plugin or in the 
+parameter configuration inline.
+
 How to build?
 -------------
 
