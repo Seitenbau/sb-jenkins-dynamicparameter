@@ -1,5 +1,8 @@
 # SB Jenkins Dynamic Plugin
 
+[![Build Status](https://buildhive.cloudbees.com/job/Seitenbau/job/sb-jenkins-dynamicparameter/badge/icon)](https://buildhive.cloudbees.com/job/Seitenbau/job/sb-jenkins-dynamicparameter/)
+
+
 This is a plugin for Jenkins-CI (http://jenkins-ci.org) which allows defining
 build parameters, which default values are generated dynamically by a script.
 Currently, only Groovy is supported as a script language. The script is executed
