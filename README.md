@@ -1,7 +1,4 @@
-
-
-What is SB Jenkins Dynamic Plugin?
-----------------------------------
+# SB Jenkins Dynamic Plugin
 
 This is a plugin for Jenkins-CI (http://jenkins-ci.org) which allows defining
 build parameters, which default values are generated dynamically by a script.
@@ -18,26 +15,27 @@ parameter, then the script must resturn a list of values.
 Groovy scripts for a parameter value can be defined by using the Jenkins Scriptler plugin or in the 
 parameter configuration inline.
 
-How to build?
--------------
+## How to build?
 
 Since, this is a standard Maven Jenkins plugin project, the plugin can be build
 by running
 
-$ mvn install
+    $ mvn install
 
 which will create the installable plugin archive target/dynamicparameter.hpi.
 
-How to test and run?
---------------------
+## How to test and run?
 
 The jenkins plugin can be run by the maven goal:
 
-$ mvn hpi:run
+    $ mvn hpi:run
 
-Authors
--------
+## Authors
 
-Dimitar Popov <dimitar.popov@seitenbau.com>
-Christian Baranowski
-http://www.seitenbau.com
+- Dimitar Popov <dimitar.popov@seitenbau.com>
+- Christian Baranowski
+
+## License
+
+Apache License, Version 2.0 (current)
+http://www.apache.org/licenses/LICENSE-2.0
