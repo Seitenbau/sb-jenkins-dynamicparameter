@@ -43,16 +43,12 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
 
   public static final String PARAMETER_TYPE_RADIO = "PT_RADIO";
 
+  public static final int DEFAULT_MAX_VISIBLE_ITEM_COUNT = 10;
+
   private final boolean readonlyInputField;
 
-  private int visibleItemCount = 10;
+  private String choiceType;
 
-  private String selectType;
-
-
-  public int getVisibleItemCount() {
-    return visibleItemCount;
-  }
 
   @Deprecated
   public ChoiceParameterDefinition(String name, String script, String description, String uuid,
@@ -68,14 +64,15 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
    * @param description parameter description
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
+   * @param choiceType type of the choice (single, multi, etc.) to display
    */
   @DataBoundConstructor
   public ChoiceParameterDefinition(String name, String script, String description, String uuid,
-          boolean remote, boolean readonlyInputField, String classPath, String selectType)
+          boolean remote, boolean readonlyInputField, String classPath, String choiceType)
   {
     super(name, script, description, uuid, remote, classPath);
     this.readonlyInputField = readonlyInputField;
-    this.selectType = selectType;
+    this.choiceType = choiceType;
   }
 
   /**
@@ -111,6 +108,7 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
    * Check if the given parameter value is within the list of possible
    * values.
    * @param parameter parameter value to check
+   * @throws IllegalArgumentException if the value is not a valid choice
    * @return the value if it is valid
    */
   @Override
@@ -118,21 +116,24 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
   {
     String actualValue = ObjectUtils.toString(parameter.value);
 
-    if (checkActualValue(actualValue)) {
+    if (checkActualValue(actualValue))
+    {
         return parameter;
     }
 
     throw new IllegalArgumentException("Illegal choice: " + actualValue);
   }
 
-  private boolean checkActualValue(String actualValue) {
-      List<String> values = Arrays.asList(StringUtils.split(actualValue, ","));
-      List<Object> choices = getChoices();
-      List<String> stringChoices = new ArrayList<String>();
+  private boolean checkActualValue(String actualValue)
+  {
+    List<String> values = Arrays.asList(StringUtils.split(actualValue, ","));
+    List<Object> choices = getChoices();
+    List<String> stringChoices = new ArrayList<String>();
 
-      for (Object choice : choices) {
-          stringChoices.add(ObjectUtils.toString(choice));
-      }
+    for (Object choice : choices)
+    {
+      stringChoices.add(ObjectUtils.toString(choice));
+    }
 
       boolean result = stringChoices.containsAll(values);
       return result;
@@ -143,13 +144,26 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
     return readonlyInputField;
   }
 
-
-  public void setSelectType(String selectType) {
-    this.selectType = selectType;
+  public void setChoiceType(String choiceType)
+  {
+    this.choiceType = choiceType;
   }
 
-  public String getSelectType() {
-    return selectType;
+  public String getChoiceType()
+  {
+    return choiceType;
+  }
+
+  public int getVisibleItemCount()
+  {
+    final int choicesCount = getChoices().size();
+
+    if (choicesCount < DEFAULT_MAX_VISIBLE_ITEM_COUNT)
+    {
+      return choicesCount;
+    }
+
+    return DEFAULT_MAX_VISIBLE_ITEM_COUNT;
   }
 
   /** Parameter descriptor. */
