@@ -22,6 +22,8 @@ import hudson.remoting.VirtualChannel;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -122,20 +124,20 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
   }
 
   @Override
-  protected ClasspathScriptCall prepareLocalCall()
+  protected ClasspathScriptCall prepareLocalCall(Map<String, String> parameters)
   {
-    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), setupLocalClassPaths());
+    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), parameters, setupLocalClassPaths());
     return call;
   }
 
   @Override
-  protected ClasspathScriptCall prepareRemoteCall(VirtualChannel channel) throws IOException,
+  protected ClasspathScriptCall prepareRemoteCall(VirtualChannel channel, Map<String, String> parameters) throws IOException,
       InterruptedException
   {
-    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), setupRemoteClassPaths(channel));
+    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), parameters, setupRemoteClassPaths(channel));
     return call;
   }
-
+  
   /**
    * Set up the class path directory on the local node.
    * @return local class paths
@@ -253,6 +255,8 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
     private static final long serialVersionUID = -8281488869664773282L;
 
     private final String _remoteScript;
+    
+    private final Map<String, String> _parameters;
 
     private final FilePath[] _classPaths;
 
@@ -261,16 +265,17 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
      * @param script script to execute
      * @param classPaths class paths
      */
-    public ClasspathScriptCall(String script, FilePath[] classPaths)
+    public ClasspathScriptCall(String script, Map<String, String> parameters, FilePath[] classPaths)
     {
       _remoteScript = script;
+      _parameters = parameters;
       _classPaths = classPaths;
     }
 
     @Override
     public Object call()
     {
-      return JenkinsUtils.execute(_remoteScript, _classPaths);
+      return JenkinsUtils.execute(_remoteScript, _parameters, _classPaths);
     }
 
   }

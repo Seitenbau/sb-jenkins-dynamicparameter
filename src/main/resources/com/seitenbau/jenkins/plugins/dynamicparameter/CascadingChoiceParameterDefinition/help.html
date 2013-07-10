@@ -1,0 +1,15 @@
+<div>
+  Defines a choice parameter whose values are dynamically generated
+  (via a groovy script) based on the value of another parameter.
+  <b>For example:</b>
+   Add a Choice parameter (param1) with values 'aaaa', and 'bbbb'. 
+   Then add a Cascading Dynamic Choice Parameter (param2) and set the parentPropertyName to 'param1'. Use the following choices script:
+   <br>
+<pre>
+def theval = ['1111', '2222'].collect {  "${param1}.${it}"}
+theval
+</pre>
+   <br>
+<b>(Note the use of 'param1'! That is how the value of the parent property will be made available to your groovy script.)</b>
+     Then, when you change param1 to be 'aaaa', the possible options in param2 will change to 'aaaa.1111' and 'aaaa.2222'.
+</div>

@@ -19,6 +19,7 @@ import hudson.Extension;
 import hudson.model.ParameterValue;
 import hudson.model.StringParameterValue;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.ObjectUtils;
@@ -83,7 +84,7 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
    */
   public final List<Object> getChoices()
   {
-    return getScriptResultAsList();
+    return getScriptResultAsList(Collections.<String, String> emptyMap());
   }
 
   /**

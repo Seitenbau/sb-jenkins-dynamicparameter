@@ -19,6 +19,7 @@ import hudson.Extension;
 import hudson.model.ParameterValue;
 import hudson.model.StringParameterValue;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.jenkinsci.plugins.scriptler.config.Script;
@@ -67,7 +68,8 @@ public class ScriptlerStringParameterDefinition extends ScriptlerParameterDefini
    */
   public final String getDefaultValue()
   {
-    return getScriptResultAsString();
+	Map<String, String> parameters = getParametersAsMap();
+    return getScriptResultAsString(parameters);
   }
 
   public boolean isReadonlyInputField() 
