@@ -1,0 +1,25 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+  xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+  xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+  <f:entry title="${%Name}" help="/help/parameter/name.html">
+    <f:textbox name="parameter.name" value="${instance.name}" />
+  </f:entry>
+  <f:entry title="${%ParentPropertyName}" field="parentPropertyName">
+    <f:textbox name="parameter.parentPropertyName" value="${instance.parentPropertyName}" />
+  </f:entry>
+  <f:entry title="${%Choices Script}" field="choicesScript">
+    <f:textarea name="parameter.script" value="${instance.script}" />
+  </f:entry>
+  <f:entry title="${%Class Paths}" field="classPath">
+    <f:textbox name="parameter.classPath" value="${instance.classPath}" />
+  </f:entry>
+  <f:entry title="${%Remote Script}" field="remoteScript">
+    <f:checkbox name="parameter.remote" checked="${instance.remote}" />
+  </f:entry>
+  <f:entry title="${%Description}" help="/help/parameter/description.html">
+    <f:textarea name="parameter.description" value="${instance.description}" />
+  </f:entry>
+  <f:entry title="${%Readonly Input Field}" field="readonlyInputField">
+    <f:checkbox name="parameter.readonlyInputField" checked="${instance.readonlyInputField}" />
+  </f:entry>
+</j:jelly>

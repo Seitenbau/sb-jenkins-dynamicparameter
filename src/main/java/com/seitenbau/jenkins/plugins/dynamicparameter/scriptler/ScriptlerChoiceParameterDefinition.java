@@ -20,6 +20,7 @@ import hudson.model.ParameterValue;
 import hudson.model.StringParameterValue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.ObjectUtils;
@@ -78,7 +79,9 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
    */
   public final List<Object> getChoices()
   {
-    return getScriptResultAsList();
+
+	Map<String, String> parameters = getParametersAsMap();
+    return getScriptResultAsList(parameters);
   }
 
   /**

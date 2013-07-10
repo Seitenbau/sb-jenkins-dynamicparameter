@@ -77,15 +77,15 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
   }
 
   @Override
-  protected ParameterizedScriptCall prepareLocalCall() throws Exception
+  protected ParameterizedScriptCall prepareLocalCall(Map<String, String> parameters) throws Exception
   {
-    return prepareCall();
+    return prepareCall(parameters);
   }
 
   @Override
-  protected ParameterizedScriptCall prepareRemoteCall(VirtualChannel channel) throws Exception
+  protected ParameterizedScriptCall prepareRemoteCall(VirtualChannel channel, Map<String, String> parameters) throws Exception
   {
-    return prepareCall();
+    return prepareCall(parameters);
   }
 
   /**
@@ -93,7 +93,7 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
    * @return call instance
    * @throws Exception if the script with the given Scriptler identifier does not exist
    */
-  private ParameterizedScriptCall prepareCall() throws Exception
+  private ParameterizedScriptCall prepareCall(Map<String, String> parameters) throws Exception
   {
     String scriptId = getScriptlerScriptId();
     Script script = ScriptHelper.getScript(scriptId, true);
@@ -101,8 +101,6 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
     {
       throw new Exception(String.format("No script with Scriplter ID '%s' exists", scriptId));
     }
-
-    Map<String, String> parameters = getParametersAsMap();
     ParameterizedScriptCall call = new ParameterizedScriptCall(script.script, parameters);
     return call;
   }
@@ -111,7 +109,7 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
    * Convert the list of parameters to a map.
    * @return a {@link Map} with script parameters
    */
-  private Map<String, String> getParametersAsMap()
+  protected Map<String, String> getParametersAsMap()
   {
     ScriptParameter[] parameters = getParameters();
     Map<String, String> map = new HashMap<String, String>(parameters.length);

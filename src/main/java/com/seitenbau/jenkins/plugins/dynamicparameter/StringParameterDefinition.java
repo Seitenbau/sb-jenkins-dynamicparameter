@@ -15,6 +15,8 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
+import java.util.Collections;
+
 import hudson.Extension;
 import hudson.model.ParameterValue;
 import hudson.model.StringParameterValue;
@@ -69,7 +71,7 @@ public class StringParameterDefinition extends ScriptParameterDefinition
    */
   public final String getDefaultValue()
   {
-    return getScriptResultAsString();
+    return getScriptResultAsString(Collections.<String, String> emptyMap());
   }
   
   /**
