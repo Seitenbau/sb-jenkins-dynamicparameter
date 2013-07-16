@@ -102,7 +102,16 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
       throw new Exception(String.format("No script with Scriplter ID '%s' exists", scriptId));
     }
 
+    // Read all parameters from job configuration
     Map<String, String> parameters = getParametersAsMap();
+
+    // Set default values, in case the value has not been set in job configuration
+    for (Parameter parameter : script.getParameters()) {
+        if (!parameters.containsKey(parameter.getName())) {
+            parameters.put(parameter.getName(), parameter.getValue());
+        }
+    }
+
     ParameterizedScriptCall call = new ParameterizedScriptCall(script.script, parameters);
     return call;
   }
