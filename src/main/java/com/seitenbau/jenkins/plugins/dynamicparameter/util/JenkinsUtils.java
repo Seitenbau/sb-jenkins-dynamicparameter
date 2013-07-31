@@ -129,12 +129,8 @@ public final class JenkinsUtils
    */
   public static boolean isPluginAvailable(String shortName)
   {
-    Plugin scriptler = Hudson.getInstance().getPlugin(shortName);
-    if (scriptler == null)
-    {
-      return false;
-    }
-    return true;
+    Plugin plugin = Hudson.getInstance().getPlugin(shortName);
+    return plugin != null;
   }
 
   /**
@@ -186,7 +182,7 @@ public final class JenkinsUtils
     Hudson instance = Hudson.getInstance();
     if (instance != null)
     {
-      List<AbstractProject> projects = instance.getItems(AbstractProject.class);
+      List<AbstractProject> projects = instance.getAllItems(AbstractProject.class);
       for (AbstractProject project : projects)
       {
         if (isParameterDefintionOf(parameterUUID, project))
