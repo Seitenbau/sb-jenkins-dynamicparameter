@@ -106,10 +106,12 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
     Map<String, String> parameters = getParametersAsMap();
 
     // Set default values, in case the value has not been set in job configuration
-    for (Parameter parameter : script.getParameters()) {
-        if (!parameters.containsKey(parameter.getName())) {
-            parameters.put(parameter.getName(), parameter.getValue());
-        }
+    for (Parameter parameter : script.getParameters())
+    {
+      if (!parameters.containsKey(parameter.getName()))
+      {
+        parameters.put(parameter.getName(), parameter.getValue());
+      }
     }
 
     ParameterizedScriptCall call = new ParameterizedScriptCall(script.script, parameters);
