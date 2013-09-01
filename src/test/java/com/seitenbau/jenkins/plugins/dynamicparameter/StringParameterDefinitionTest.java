@@ -78,12 +78,12 @@ public class StringParameterDefinitionTest
 
     assertNull(stringParameterDefinition.createValue(req));
   }
-  
+
   /** Test for {@link StringParameterDefinition#createValue(StaplerRequest)}. */
   @Test
   public final void testDefaultValue()
   {
-	final ParameterValue paramValue = stringParameterDefinition.getDefaultParameterValue();
+    final ParameterValue paramValue = stringParameterDefinition.getDefaultParameterValue();
 
     assertEquals(SCRIPT_RESULT, ((StringParameterValue) paramValue).value);
   }
@@ -104,7 +104,10 @@ public class StringParameterDefinitionTest
   {
     final StaplerRequest req = mock(StaplerRequest.class);
     // final JSONObject jo = mock(JSONObject.class);
-    final JSONObject jo = null;
+    // so we genrate our own mock data:
+    final JSONObject jo = new JSONObject(false);
+    jo.put("name", "someName");
+    jo.put("value", "1");
 
     final StringParameterValue value = new StringParameterValue("testName", "testValue");
 

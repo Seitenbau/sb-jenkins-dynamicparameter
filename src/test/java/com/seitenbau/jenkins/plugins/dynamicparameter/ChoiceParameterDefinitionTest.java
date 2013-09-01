@@ -30,6 +30,7 @@ import hudson.model.StringParameterValue;
 import java.util.Collections;
 import java.util.List;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
@@ -161,7 +162,7 @@ public class ChoiceParameterDefinitionTest
     assertTrue(paramValue instanceof StringParameterValue);
     assertEquals(value, ((StringParameterValue) paramValue).value);
   }
-  
+
   /**
    * Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}.
    */
@@ -194,12 +195,23 @@ public class ChoiceParameterDefinitionTest
   {
     final StaplerRequest req = mock(StaplerRequest.class);
     // final JSONObject jo = mock(JSONObject.class); // mockito cannot mock final classes
-    final JSONObject jo = null;
+    // so we genrate our own mock data:
+    final JSONArray array = new JSONArray();
+    array.add("1");
+    array.add("2");
+
+    final JSONObject jo = new JSONObject(false);
+    jo.put("name", "someName");
+    jo.put("value", array);
+
+    final JSONObject newJo = new JSONObject(false);
+    newJo.put("name", "someName");
+    newJo.put("value", "1,2");
 
     final StringParameterValue value = new StringParameterValue("value",
         (String) SCRIPT_STRINGS_RESULT[1]);
 
-    when(req.bindJSON(StringParameterValue.class, jo)).thenReturn(value);
+    when(req.bindJSON(StringParameterValue.class, newJo)).thenReturn(value);
     final ParameterValue result = choiceParameterDefinition.createValue(req, jo);
 
     assertEquals(value, result);

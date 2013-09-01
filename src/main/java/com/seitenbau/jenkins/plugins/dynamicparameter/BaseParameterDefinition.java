@@ -28,7 +28,9 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import net.sf.json.util.JSONUtils;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
@@ -76,12 +78,12 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
       _uuid = UUID.fromString(uuid);
     }
   }
-  
+
   /**
    * Return a Parameter value object for a command line parameter.
    */
   @Override
-  public ParameterValue createValue(String value) 
+  public ParameterValue createValue(String value)
   {
     // Fix for issue https://github.com/Seitenbau/sb-jenkins-dynamicparameter/issues/3
     StringParameterValue parameterValue = createStringParameterValueFor(this.getName(), value);
@@ -139,7 +141,21 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
   @Override
   public final ParameterValue createValue(StaplerRequest req, JSONObject jo)
   {
-    StringParameterValue parameterValue = req.bindJSON(StringParameterValue.class, jo);
+    final JSONObject newJo = new JSONObject(false);
+
+    final Object value = jo.get("value");
+    final String stringValue;
+
+    if (JSONUtils.isArray(value)) {
+        stringValue = ((JSONArray)value).join(",", true);
+    } else {
+        stringValue = String.valueOf(value);
+    }
+
+    newJo.put("name", jo.get("name"));
+    newJo.put("value", stringValue);
+
+    StringParameterValue parameterValue = req.bindJSON(StringParameterValue.class, newJo);
     parameterValue.setDescription(getDescription());
     return checkParameterValue(parameterValue);
   }
