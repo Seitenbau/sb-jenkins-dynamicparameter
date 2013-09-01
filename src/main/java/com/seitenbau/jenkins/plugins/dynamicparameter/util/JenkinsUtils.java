@@ -43,7 +43,6 @@ import org.jenkinsci.plugins.scriptler.config.Script;
 import org.jenkinsci.plugins.scriptler.config.ScriptlerConfiguration;
 
 import com.seitenbau.jenkins.plugins.dynamicparameter.BaseParameterDefinition;
-import com.seitenbau.jenkins.plugins.dynamicparameter.ScriptParameterDefinition;
 
 /**
  * Jenkins utility methods.
@@ -129,8 +128,8 @@ public final class JenkinsUtils
    */
   public static boolean isPluginAvailable(String shortName)
   {
-    Plugin scriptler = Hudson.getInstance().getPlugin(shortName);
-    if (scriptler == null)
+    Plugin plugin = Hudson.getInstance().getPlugin(shortName);
+    if(plugin == null)
     {
       return false;
     }
@@ -186,7 +185,7 @@ public final class JenkinsUtils
     Hudson instance = Hudson.getInstance();
     if (instance != null)
     {
-      List<AbstractProject> projects = instance.getItems(AbstractProject.class);
+      List<AbstractProject> projects = instance.getAllItems(AbstractProject.class);
       for (AbstractProject project : projects)
       {
         if (isParameterDefintionOf(parameterUUID, project))
