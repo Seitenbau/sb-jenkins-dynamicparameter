@@ -43,7 +43,6 @@ import org.jenkinsci.plugins.scriptler.config.Script;
 import org.jenkinsci.plugins.scriptler.config.ScriptlerConfiguration;
 
 import com.seitenbau.jenkins.plugins.dynamicparameter.BaseParameterDefinition;
-import com.seitenbau.jenkins.plugins.dynamicparameter.ScriptParameterDefinition;
 
 /**
  * Jenkins utility methods.
@@ -130,7 +129,11 @@ public final class JenkinsUtils
   public static boolean isPluginAvailable(String shortName)
   {
     Plugin plugin = Hudson.getInstance().getPlugin(shortName);
-    return plugin != null;
+    if(plugin == null)
+    {
+      return false;
+    }
+    return true;
   }
 
   /**
