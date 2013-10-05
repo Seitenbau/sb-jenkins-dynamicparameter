@@ -49,7 +49,6 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
 
   private String choiceType;
 
-
   @Deprecated
   public ChoiceParameterDefinition(String name, String script, String description, String uuid,
       boolean remote, String classPath)
@@ -151,6 +150,9 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
 
   public String getChoiceType()
   {
+	if(StringUtils.isEmpty(choiceType)) {
+		return PARAMETER_TYPE_SINGLE_SELECT;
+	}
     return choiceType;
   }
 
