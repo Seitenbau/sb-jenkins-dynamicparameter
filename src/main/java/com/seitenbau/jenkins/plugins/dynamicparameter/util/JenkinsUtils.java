@@ -98,6 +98,11 @@ public final class JenkinsUtils
       {
         String classPathString = path.absolutize().toURI().toURL().getPath();
         classPathList.add(classPathString);
+        FilePath[] jars = path.list("*.jar");
+        for (FilePath jar : jars) {
+          String jarClassPathString = jar.absolutize().toURI().toURL().getPath();
+          classPathList.add(jarClassPathString);
+        }
       }
       config.setClasspathList(classPathList);
       GroovyShell groovyShell = new GroovyShell(config);
