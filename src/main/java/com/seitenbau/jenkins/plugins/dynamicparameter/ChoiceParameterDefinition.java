@@ -100,7 +100,7 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
    */
   public final List<Object> getChoices()
   {
-    return getScriptResultAsList();
+    return getScriptResultAsList(Collections.<String, String> emptyMap());
   }
 
   /**

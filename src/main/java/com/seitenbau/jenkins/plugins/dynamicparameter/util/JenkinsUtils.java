@@ -28,6 +28,7 @@ import hudson.remoting.VirtualChannel;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -76,25 +77,18 @@ public final class JenkinsUtils
    */
   public static Object execute(String script, Map<String, String> parameters)
   {
-    CompilerConfiguration config = new CompilerConfiguration();
-    GroovyShell groovyShell = new GroovyShell(config);
-
-    for (Entry<String, String> parameter : parameters.entrySet())
-    {
-      groovyShell.setVariable(parameter.getKey(), parameter.getValue());
-    }
-
-    Object evaluate = groovyShell.evaluate(script);
-    return evaluate;
+	  FilePath[] emptyClassPaths = new FilePath[]{};
+	  return execute(script, parameters, emptyClassPaths);
   }
 
   /**
-   * Execute the script locally using the given class path.
+   * Execute the script locally with the given parameters and using the given class path.
    * @param script script to execute
+   * @param parameters parameters
    * @param classPaths class paths
    * @return result from the script
    */
-  public static Object execute(String script, FilePath[] classPaths)
+  public static Object execute(String script, Map<String, String> parameters, FilePath[] classPaths)
   {
     try
     {
@@ -107,9 +101,14 @@ public final class JenkinsUtils
         classPathList.add(classPathString);
       }
       config.setClasspathList(classPathList);
+      GroovyShell groovyShell = new GroovyShell(config);
+      
+      for (Entry<String, String> parameter : parameters.entrySet())
+      {
+        groovyShell.setVariable(parameter.getKey(), parameter.getValue());
+      }
 
       // execute script
-      GroovyShell groovyShell = new GroovyShell(config);
       Object evaluate = groovyShell.evaluate(script);
 
       return evaluate;
@@ -176,11 +175,25 @@ public final class JenkinsUtils
 
   /**
    * Find the label assigned to the current project.
-   * @param parameterUUID UUID of the project parameter
    * @return {@code null} if the label of the current project cannot be found
    */
   @SuppressWarnings("rawtypes")
   public static Label findProjectLabel(UUID parameterUUID)
+  {
+	AbstractProject project = findCurrentProject(parameterUUID);
+    if (project != null)
+    {
+       return project.getAssignedLabel();
+    }
+    return null;
+  }
+
+  /**
+   * Find the current project.
+   * @return {@code null} if the current project cannot be found
+   */
+  @SuppressWarnings("rawtypes")
+  public static AbstractProject findCurrentProject(UUID parameterUUID)
   {
     Hudson instance = Hudson.getInstance();
     if (instance != null)
@@ -190,12 +203,13 @@ public final class JenkinsUtils
       {
         if (isParameterDefintionOf(parameterUUID, project))
         {
-          return project.getAssignedLabel();
+          return project;
         }
       }
     }
     return null;
   }
+  
 
   /**
    * Returns true if this parameter definition is a definition of the given project.
@@ -228,7 +242,7 @@ public final class JenkinsUtils
    * @return parameter definitions or an empty list
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private static List<ParameterDefinition> getProjectParameterDefinitions(AbstractProject project)
+  public static List<ParameterDefinition> getProjectParameterDefinitions(AbstractProject project)
   {
     ParametersDefinitionProperty parametersDefinitionProperty =
         (ParametersDefinitionProperty) project.getProperty(ParametersDefinitionProperty.class);

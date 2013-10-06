@@ -1,0 +1,42 @@
+<!--
+Copyright 2012 Seitenbau
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+  xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+  xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+  <st:once>
+    <script type="text/javascript" src="${rootURL}/plugin/dynamicparameter/js/cascadingchoice.js" />
+  </st:once>
+  <script type="text/javascript">
+    // first set an id on the parent form element so we can watch it for changes
+    addIdToFormElement('${it.projectName}_${it.parentPropertyName}', '${it.parentPropertyName}');
+    // then start watching it
+    new Form.Element.Observer(
+      '${it.projectName}_${it.parentPropertyName}',
+      0.2,  // 200 milliseconds
+      function(el, value){
+        getChoiceValues('${it.projectName}', '${it.parentPropertyName}','${it.name}');
+      }
+    )
+  </script>
+  <f:entry title="${it.name}" description="${it.description}">
+    <div name="parameter" description="${it.description}" id="${it.projectName}_${it.name}">
+    </div>
+  </f:entry>
+  <script type="text/javascript">
+    //now initialize the child property with the current value of the parent property
+    getChoiceValues('${it.projectName}', '${it.parentPropertyName}','${it.name}');
+  </script>
+</j:jelly>

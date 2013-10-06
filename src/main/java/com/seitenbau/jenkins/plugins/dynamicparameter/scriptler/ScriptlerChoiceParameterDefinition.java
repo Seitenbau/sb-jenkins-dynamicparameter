@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.ObjectUtils;
@@ -86,7 +87,9 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
    */
   public final List<Object> getChoices()
   {
-    return getScriptResultAsList();
+
+	Map<String, String> parameters = getParametersAsMap();
+    return getScriptResultAsList(parameters);
   }
 
   /**
