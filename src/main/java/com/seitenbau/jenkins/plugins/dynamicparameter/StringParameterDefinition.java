@@ -30,7 +30,7 @@ public class StringParameterDefinition extends ScriptParameterDefinition
   /** Serial version UID. */
   private static final long serialVersionUID = 3162331168133114084L;
   
-  private final boolean readonlyInputField;
+  private final Boolean readonlyInputField;
 
   /**
    * Constructor is deprecated use instead the constructor with the read only parameter.
@@ -58,7 +58,7 @@ public class StringParameterDefinition extends ScriptParameterDefinition
    */
   @DataBoundConstructor
   public StringParameterDefinition(String name, String script, String description, String uuid,
-      Boolean remote, boolean readonlyInputField, String classPath)
+      Boolean remote, Boolean readonlyInputField, String classPath)
   {
     super(name, script, description, uuid, remote, classPath);
     this.readonlyInputField = readonlyInputField;
@@ -85,6 +85,10 @@ public class StringParameterDefinition extends ScriptParameterDefinition
 
   public final boolean isReadonlyInputField() 
   {
+    if(readonlyInputField == null)
+    {
+      return false;
+    }
     return readonlyInputField;
   }
 

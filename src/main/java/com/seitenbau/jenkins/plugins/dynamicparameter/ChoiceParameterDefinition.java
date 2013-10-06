@@ -45,7 +45,7 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
 
   public static final int DEFAULT_MAX_VISIBLE_ITEM_COUNT = 10;
 
-  private final boolean readonlyInputField;
+  private final Boolean readonlyInputField;
 
   private String choiceType;
 
@@ -67,7 +67,7 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
    */
   @DataBoundConstructor
   public ChoiceParameterDefinition(String name, String script, String description, String uuid,
-          Boolean remote, boolean readonlyInputField, String classPath, String choiceType)
+          Boolean remote, Boolean readonlyInputField, String classPath, String choiceType)
   {
     super(name, script, description, uuid, remote, classPath);
     this.readonlyInputField = readonlyInputField;
@@ -105,6 +105,10 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
 
   public boolean isReadonlyInputField()
   {
+    if(readonlyInputField == null) 
+    {
+      return false;
+    }
     return readonlyInputField;
   }
 

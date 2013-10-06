@@ -41,7 +41,7 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
   /** Serial version UID. */
   private static final long serialVersionUID = -5751222508337683456L;
 
-  private final boolean readonlyInputField;
+  private final Boolean readonlyInputField;
 
   private String choiceType;
 
@@ -57,7 +57,7 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
    */
   @DataBoundConstructor
   public ScriptlerChoiceParameterDefinition(String name, String description, String uuid,
-      String scriptlerScriptId, ScriptParameter[] parameters, Boolean remote, boolean readonlyInputField, String choiceType)
+      String scriptlerScriptId, ScriptParameter[] parameters, Boolean remote, Boolean readonlyInputField, String choiceType)
   {
     super(name, description, uuid, scriptlerScriptId, parameters, remote);
     this.readonlyInputField = readonlyInputField;
@@ -93,6 +93,10 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
 
   public boolean isReadonlyInputField()
   {
+    if(readonlyInputField == null)
+    {
+      return false;
+    }
     return readonlyInputField;
   }
 
