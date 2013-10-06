@@ -91,18 +91,26 @@ public final class JenkinsUtils
   {
     try
     {
+      CompilerConfiguration config = new CompilerConfiguration();
+      
       // set class path
       ArrayList<String> classPathList = new ArrayList<String>(classPaths.length);
-      CompilerConfiguration config = new CompilerConfiguration();
-      for (FilePath path : classPaths)
+      try 
       {
-        String classPathString = path.absolutize().toURI().toURL().getPath();
-        classPathList.add(classPathString);
-        FilePath[] jars = path.list("*.jar");
-        for (FilePath jar : jars) {
-          String jarClassPathString = jar.absolutize().toURI().toURL().getPath();
-          classPathList.add(jarClassPathString);
-        }
+          for (FilePath path : classPaths)
+          {
+            String classPathString = path.absolutize().toURI().toURL().getPath();
+            classPathList.add(classPathString);
+            FilePath[] jars = path.list("*.jar");
+            for (FilePath jar : jars) {
+              String jarClassPathString = jar.absolutize().toURI().toURL().getPath();
+              classPathList.add(jarClassPathString);
+            }
+          }
+      } 
+      catch(Exception exp) 
+      {
+          logger.log(Level.INFO, "Cannot access path", exp);
       }
       config.setClasspathList(classPathList);
       GroovyShell groovyShell = new GroovyShell(config);
