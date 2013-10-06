@@ -19,7 +19,7 @@ limitations under the License.
   <f:entry title="${%Name}" help="/help/parameter/name.html">
     <f:textbox name="parameter.name" value="${instance.name}" />
   </f:entry>
-  <f:entry title="${%ParentPropertyName}" field="parentPropertyName">
+  <f:entry title="${%Parent Property Name}" field="parentPropertyName">
     <f:textbox name="parameter.parentPropertyName" value="${instance.parentPropertyName}" />
   </f:entry>
   <f:entry title="${%Choices Script}" field="choicesScript">
