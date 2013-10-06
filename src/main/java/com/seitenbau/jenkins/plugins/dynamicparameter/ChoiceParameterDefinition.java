@@ -103,41 +103,6 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
     return getScriptResultAsList(Collections.<String, String> emptyMap());
   }
 
-  /**
-   * Check if the given parameter value is within the list of possible
-   * values.
-   * @param parameter parameter value to check
-   * @throws IllegalArgumentException if the value is not a valid choice
-   * @return the value if it is valid
-   */
-  @Override
-  protected StringParameterValue checkParameterValue(StringParameterValue parameter)
-  {
-    String actualValue = ObjectUtils.toString(parameter.value);
-
-    if (checkActualValue(actualValue))
-    {
-        return parameter;
-    }
-
-    throw new IllegalArgumentException("Illegal choice: " + actualValue);
-  }
-
-  private boolean checkActualValue(String actualValue)
-  {
-    List<String> values = Arrays.asList(StringUtils.split(actualValue, ","));
-    List<Object> choices = getChoices();
-    List<String> stringChoices = new ArrayList<String>();
-
-    for (Object choice : choices)
-    {
-      stringChoices.add(ObjectUtils.toString(choice));
-    }
-
-      boolean result = stringChoices.containsAll(values);
-      return result;
-  }
-
   public boolean isReadonlyInputField()
   {
     return readonlyInputField;
@@ -150,9 +115,9 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
 
   public String getChoiceType()
   {
-	if(StringUtils.isEmpty(choiceType)) {
-		return PARAMETER_TYPE_SINGLE_SELECT;
-	}
+    if(StringUtils.isEmpty(choiceType)) {
+      return PARAMETER_TYPE_SINGLE_SELECT;
+    }
     return choiceType;
   }
 

@@ -106,15 +106,5 @@ public class CascadingChoiceParameterDefinition extends ChoiceParameterDefinitio
     }
     return null;
   }
-  
-  /**
-   * Overriding this method so it doesn't kill Cascading choice parameters.
-   * @param parameter parameter value to check
-   * @return the value if it is valid
-   */
-  @Override
-  protected StringParameterValue checkParameterValue(StringParameterValue parameter)
-  {
-    return parameter;
-  }
+
 }

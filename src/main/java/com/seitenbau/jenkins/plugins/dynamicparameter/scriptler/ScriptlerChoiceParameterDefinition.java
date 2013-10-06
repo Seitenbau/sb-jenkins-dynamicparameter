@@ -87,43 +87,8 @@ public class ScriptlerChoiceParameterDefinition extends ScriptlerParameterDefini
    */
   public final List<Object> getChoices()
   {
-
-	Map<String, String> parameters = getParametersAsMap();
+    Map<String, String> parameters = getParametersAsMap();
     return getScriptResultAsList(parameters);
-  }
-
-  /**
-   * Check if the given parameter value is within the list of possible values.
-   * @param parameter parameter value to check
-   * @throws IllegalArgumentException if the value is not a valid choice
-   * @return the value if it is valid
-   */
-  @Override
-  protected StringParameterValue checkParameterValue(StringParameterValue parameter)
-  {
-    String actualValue = ObjectUtils.toString(parameter.value);
-
-    if (checkActualValue(actualValue))
-    {
-        return parameter;
-    }
-
-    throw new IllegalArgumentException("Illegal choice: " + actualValue);
-  }
-
-  private boolean checkActualValue(String actualValue)
-  {
-    List<String> values = Arrays.asList(StringUtils.split(actualValue, ","));
-    List<Object> choices = getChoices();
-    List<String> stringChoices = new ArrayList<String>();
-
-    for (Object choice : choices)
-    {
-      stringChoices.add(ObjectUtils.toString(choice));
-    }
-
-      boolean result = stringChoices.containsAll(values);
-      return result;
   }
 
   public boolean isReadonlyInputField()
