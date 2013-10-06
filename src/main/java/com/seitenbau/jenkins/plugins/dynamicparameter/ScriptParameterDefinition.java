@@ -68,7 +68,7 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
    * @param remote execute the script on a remote node
    */
   protected ScriptParameterDefinition(String name, String script, String description, String uuid,
-      boolean remote, String classPath)
+      Boolean remote, String classPath)
   {
     super(name, description, uuid, remote);
 

@@ -40,7 +40,7 @@ public class StringParameterDefinition extends ScriptParameterDefinition
    */
   @Deprecated
   public StringParameterDefinition(String name, String script, String description, String uuid,
-      boolean remote, String classPath)
+      Boolean remote, String classPath)
   {
     this(name, script, description, uuid, remote, false, classPath);
   }
@@ -58,7 +58,7 @@ public class StringParameterDefinition extends ScriptParameterDefinition
    */
   @DataBoundConstructor
   public StringParameterDefinition(String name, String script, String description, String uuid,
-      boolean remote, boolean readonlyInputField, String classPath)
+      Boolean remote, boolean readonlyInputField, String classPath)
   {
     super(name, script, description, uuid, remote, classPath);
     this.readonlyInputField = readonlyInputField;

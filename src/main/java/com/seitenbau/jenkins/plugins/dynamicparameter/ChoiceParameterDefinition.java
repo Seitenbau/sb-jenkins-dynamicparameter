@@ -51,7 +51,7 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
 
   @Deprecated
   public ChoiceParameterDefinition(String name, String script, String description, String uuid,
-      boolean remote, String classPath)
+      Boolean remote, String classPath)
   {
     this(name, script, description, uuid, remote, false, classPath, PARAMETER_TYPE_SINGLE_SELECT);
   }
@@ -67,7 +67,7 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
    */
   @DataBoundConstructor
   public ChoiceParameterDefinition(String name, String script, String description, String uuid,
-          boolean remote, boolean readonlyInputField, String classPath, String choiceType)
+          Boolean remote, boolean readonlyInputField, String classPath, String choiceType)
   {
     super(name, script, description, uuid, remote, classPath);
     this.readonlyInputField = readonlyInputField;

@@ -53,7 +53,7 @@ public class CascadingChoiceParameterDefinition extends ChoiceParameterDefinitio
    */
   @DataBoundConstructor
   public CascadingChoiceParameterDefinition(String name, String parentPropertyName, String script, String description, String uuid,
-      boolean remote, boolean readonlyInputField, String classPath)
+      Boolean remote, boolean readonlyInputField, String classPath)
   {
     super(name, script, description, uuid, remote, readonlyInputField, classPath, null);
     _parentPropertyName = parentPropertyName;

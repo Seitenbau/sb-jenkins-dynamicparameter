@@ -47,7 +47,7 @@ public class ScriptlerStringParameterDefinition extends ScriptlerParameterDefini
    */
   @DataBoundConstructor
   public ScriptlerStringParameterDefinition(String name, String description, String uuid,
-      String scriptlerScriptId, ScriptParameter[] parameters, boolean remote, boolean readonlyInputField)
+      String scriptlerScriptId, ScriptParameter[] parameters, Boolean remote, boolean readonlyInputField)
   {
     super(name, description, uuid, scriptlerScriptId, parameters, remote);
     this.readonlyInputField = readonlyInputField;

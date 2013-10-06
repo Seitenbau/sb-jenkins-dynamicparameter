@@ -56,7 +56,7 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
   private final UUID _uuid;
 
   /** Flag showing if the script should be executed remotely. */
-  private final boolean _remote;
+  private final Boolean _remote;
 
   /**
    * Constructor.
@@ -65,7 +65,7 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
    * @param uuid UUID of the parameter definition
    * @param remote flag showing if the script should be executed remotely
    */
-  protected BaseParameterDefinition(String name, String description, String uuid, boolean remote)
+  protected BaseParameterDefinition(String name, String description, String uuid, Boolean remote)
   {
     super(name, description);
     _remote = remote;
@@ -97,6 +97,9 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
    */
   public final boolean isRemote()
   {
+    if(_remote == null) {
+      return true;
+    }
     return _remote;
   }
 

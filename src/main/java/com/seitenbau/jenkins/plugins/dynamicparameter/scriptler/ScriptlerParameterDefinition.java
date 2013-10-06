@@ -51,7 +51,7 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
    * @param remote flag showing if the script should be executed remotely
    */
   protected ScriptlerParameterDefinition(String name, String description, String uuid,
-      String scriptlerScriptId, ScriptParameter[] parameters, boolean remote)
+      String scriptlerScriptId, ScriptParameter[] parameters, Boolean remote)
   {
     super(name, description, uuid, remote);
     _scriptlerScriptId = scriptlerScriptId;
