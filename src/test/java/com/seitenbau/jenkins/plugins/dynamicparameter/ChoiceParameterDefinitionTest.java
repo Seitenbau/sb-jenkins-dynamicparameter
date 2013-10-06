@@ -178,10 +178,12 @@ public class ChoiceParameterDefinitionTest
   /**
    * Test for {@link ChoiceParameterDefinition#createValue(StaplerRequest)}.
    */
+  @Ignore("disabled the check feature in the model")
   @Test(expected = IllegalArgumentException.class)
   public final void testCreateValueWrongChoice()
   {
     final StaplerRequest req = mock(StaplerRequest.class);
+    
     when(req.getParameterValues(anyString())).thenReturn(new String[] {"invalid"});
 
     choiceParameterDefinition.createValue(req);
