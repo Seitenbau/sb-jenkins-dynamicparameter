@@ -15,19 +15,18 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter.scriptler;
 
+import com.seitenbau.jenkins.plugins.dynamicparameter.BaseParameterDefinition;
+import hudson.model.TaskListener;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import org.jenkinsci.plugins.scriptler.config.Parameter;
 import org.jenkinsci.plugins.scriptler.config.Script;
+import org.jenkinsci.plugins.scriptler.util.GroovyScript;
 import org.jenkinsci.plugins.scriptler.util.ScriptHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import com.seitenbau.jenkins.plugins.dynamicparameter.BaseParameterDefinition;
-import com.seitenbau.jenkins.plugins.dynamicparameter.util.JenkinsUtils;
+import java.util.HashMap;
+import java.util.Map;
 
 /** Base class for all dynamic parameters using Scriptler scripts. */
 public abstract class ScriptlerParameterDefinition extends BaseParameterDefinition
@@ -165,7 +164,7 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
 
     private final String _remoteScript;
 
-    private final Map<String, String> _parameters;
+    private final Parameter[] _parameters;
 
     /**
      * Constructor.
@@ -174,14 +173,18 @@ public abstract class ScriptlerParameterDefinition extends BaseParameterDefiniti
      */
     public ParameterizedScriptCall(String script, Map<String, String> parameters)
     {
-      _remoteScript = script;
-      _parameters = parameters;
+        _remoteScript = script;
+        _parameters = new Parameter[parameters.size()];
+        int i = 0;
+        for (Map.Entry<String, String> e : parameters.entrySet()) {
+            _parameters[i++] = new Parameter(e.getKey(), e.getValue());
+        }
     }
 
     @Override
     public Object call()
     {
-      return JenkinsUtils.execute(_remoteScript, _parameters);
+        return new GroovyScript(_remoteScript, _parameters, true, TaskListener.NULL).call();
     }
 
   }
