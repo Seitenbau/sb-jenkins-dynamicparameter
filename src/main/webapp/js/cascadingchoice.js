@@ -6,7 +6,7 @@
  * @param childPropertyName - the name of the child property (structured form element)
  */
 function getChoiceValues(projectName, parentPropertyName, childPropertyName){
-	new Ajax.Updater(projectName+'_'+childPropertyName, '/plugin/dynamicparameter/getParameterValues', {
+	new Ajax.Updater(projectName+'_'+childPropertyName, rootURL+'/plugin/dynamicparameter/getParameterValues', {
 		  parameters: { 
 		  	projectName: projectName, 
 		  	parentPropertyValue: getStructuredFormElementValue(parentPropertyName), 
@@ -36,9 +36,9 @@ function getStructuredFormElement(structuredFormElementName){
 	var theParamDiv = $$('div[name=parameter]').detect(function(p) {
 		var nameObj = $A(p.getElementsByTagName("input")).detect(function(f){
 			return f.name == 'name' && $F(f) == structuredFormElementName;
-		})
-		return (nameObj != null && nameObj.getValue() == structuredFormElementName)
-	})
+		});
+		return (nameObj != null && nameObj.getValue() == structuredFormElementName);
+	});
 	if(theParamDiv != null){
         var objList = $A(theParamDiv.getElementsByTagName("select"));
         if(objList == null || objList.size() == 0){
@@ -46,11 +46,11 @@ function getStructuredFormElement(structuredFormElementName){
         }
 		//alert('objList:' + objList.collect( function(o) { return o.outerHTML}).join(';'));
 	    var valObj = objList.compact().detect(function(f){
-			return f.name == 'value'
-		})
+			return f.name == 'value';
+		});
 		return valObj;
 	}
-	return null
+	return null;
 }
 
 /**
@@ -64,10 +64,10 @@ function addIdToFormElement(formElementId, structuredFormElementName){
 		valObj.setAttribute("id", formElementId);
 	}else{
 		if(console) {
-			console.error('ERROR: Structured Form Element Not Found: '+structuredFormElementName)
+			console.error('ERROR: Structured Form Element Not Found: '+structuredFormElementName);
 		} 
 		else {
-			alert('ERROR: Structured Form Element Not Found: '+structuredFormElementName)
+			alert('ERROR: Structured Form Element Not Found: '+structuredFormElementName);
 		}
 	}
 }
