@@ -6,7 +6,7 @@
  * @param childPropertyName - the name of the child property (structured form element)
  */
 function getChoiceValues(projectName, parentPropertyName, childPropertyName){
-	new Ajax.Updater(projectName+'_'+childPropertyName, '/plugin/dynamicparameter/getParameterValues', {
+	new Ajax.Updater(projectName+'_'+childPropertyName, rootURL+'/plugin/dynamicparameter/getParameterValues', {
 		  parameters: { 
 		  	projectName: projectName, 
 		  	parentPropertyValue: getStructuredFormElementValue(parentPropertyName), 
