@@ -211,8 +211,8 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
   private final Object executeScript(Map<String, String> parameters)
   {
     // It contains the env vars of the current JVM process, not necessarily the master/slave vars
-	final Map<String, String> envVars = EnvVars.masterEnvVars;
-	for (Map.Entry<String,String> entry: parameters.entrySet()) {
+    final Map<String, String> envVars = EnvVars.masterEnvVars;
+    for (Map.Entry<String,String> entry: parameters.entrySet()) {
       entry.setValue(Util.replaceMacro(entry.getValue(), envVars));
     }
     try
