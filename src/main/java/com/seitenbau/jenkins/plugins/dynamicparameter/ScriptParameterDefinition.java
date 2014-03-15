@@ -15,7 +15,9 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
+import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Util;
 import hudson.model.AutoCompletionCandidates;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
@@ -75,6 +77,9 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
     _localBaseDirectory = new FilePath(DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile());
     _remoteBaseDirectory = DEFAULT_REMOTE_CLASSPATH;
     _classPath = classPath;
+    
+    final Map<String, String> envVars = EnvVars.masterEnvVars;
+    script = Util.replaceMacro(script, envVars);
     _script = script;
   }
 
