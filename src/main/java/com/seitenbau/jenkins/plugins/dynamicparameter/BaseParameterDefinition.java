@@ -15,6 +15,8 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter;
 
+import hudson.EnvVars;
+import hudson.Util;
 import hudson.model.ParameterValue;
 import hudson.model.SimpleParameterDefinition;
 import hudson.model.Label;
@@ -23,8 +25,8 @@ import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -208,6 +210,11 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
    */
   private final Object executeScript(Map<String, String> parameters)
   {
+    // It contains the env vars of the current JVM process, not necessarily the master/slave vars
+    final Map<String, String> envVars = EnvVars.masterEnvVars;
+    for (Map.Entry<String,String> entry: parameters.entrySet()) {
+      entry.setValue(Util.replaceMacro(entry.getValue(), envVars));
+    }
     try
     {
       if (isRemote())
@@ -234,6 +241,9 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
             return channel.call(call);
           }
         }
+      }
+      for (Map.Entry<String,String> entry: parameters.entrySet()) {
+        entry.setValue(Util.replaceMacro(entry.getValue(), envVars));
       }
       Callable<Object, Throwable> call = prepareLocalCall(parameters);
       return call.call();
