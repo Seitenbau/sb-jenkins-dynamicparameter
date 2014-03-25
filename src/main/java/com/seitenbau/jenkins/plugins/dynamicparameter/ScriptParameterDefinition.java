@@ -120,7 +120,7 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
    */
   public final String[] getClassPathList()
   {
-    return _classPath.split(CLASSPATH_SPLITTER);
+    return _classPath != null ? _classPath.split(CLASSPATH_SPLITTER) : new String[0];
   }
 
   @Override

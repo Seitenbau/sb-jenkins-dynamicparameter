@@ -99,6 +99,8 @@ public final class JenkinsUtils
       {
           for (FilePath path : classPaths)
           {
+	    if(!path.exists())
+	        continue;
             String classPathString = path.absolutize().toURI().toURL().getPath();
             classPathList.add(classPathString);
             FilePath[] jars = path.list("*.jar");
