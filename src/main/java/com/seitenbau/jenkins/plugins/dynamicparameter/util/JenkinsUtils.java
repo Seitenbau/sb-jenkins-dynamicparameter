@@ -15,6 +15,7 @@
  */
 package com.seitenbau.jenkins.plugins.dynamicparameter.util;
 
+import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import hudson.FilePath;
 import hudson.Plugin;
@@ -41,6 +42,12 @@ import org.apache.commons.lang.ObjectUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.jenkinsci.plugins.scriptler.config.Script;
 import org.jenkinsci.plugins.scriptler.config.ScriptlerConfiguration;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
+import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
 
 import com.seitenbau.jenkins.plugins.dynamicparameter.BaseParameterDefinition;
 
@@ -77,7 +84,7 @@ public final class JenkinsUtils
   public static Object execute(String script, Map<String, String> parameters)
   {
 	  FilePath[] emptyClassPaths = new FilePath[]{};
-	  return execute(script, parameters, emptyClassPaths);
+	  return execute(script, parameters, emptyClassPaths, /* sandbox */ false);
   }
 
   /**
@@ -87,11 +94,18 @@ public final class JenkinsUtils
    * @param classPaths class paths
    * @return result from the script
    */
-  public static Object execute(String script, Map<String, String> parameters, FilePath[] classPaths)
+  public static Object execute(final String script, Map<String, String> parameters, FilePath[] classPaths, boolean sandbox)
   {
     try
     {
-      CompilerConfiguration config = new CompilerConfiguration();
+      CompilerConfiguration config;
+      
+      if (sandbox) {
+    	  config = GroovySandbox.createSecureCompilerConfiguration();
+      }
+      else {
+    	  config = new CompilerConfiguration();
+      }
       
       // set class path
       ArrayList<String> classPathList = new ArrayList<String>(classPaths.length);
@@ -113,25 +127,57 @@ public final class JenkinsUtils
           logger.log(Level.INFO, "Cannot access path", exp);
       }
       config.setClasspathList(classPathList);
-      GroovyShell groovyShell = new GroovyShell(config);
       
+      Binding binding = new Binding();
       for (Entry<String, String> parameter : parameters.entrySet())
       {
-        groovyShell.setVariable(parameter.getKey(), parameter.getValue());
+    	  binding.setVariable(parameter.getKey(), parameter.getValue());
       }
 
       // execute script
-      Object evaluate = groovyShell.evaluate(script);
+      final Object evaluate;
+      if (sandbox) {
+    	  final GroovyShell groovyShell = new GroovyShell(binding, config);
+    	  MyRunnable r = new MyRunnable(groovyShell, script);
+    	  GroovySandbox.runInSandbox(r, Whitelist.all());
+    	  evaluate = r.getEvaluated();
+      } else {
+    	  evaluate = new GroovyShell(binding, config).evaluate(ScriptApproval.get().using(script, GroovyLanguage.get()));
+      }
 
       return evaluate;
     }
     catch (Exception e)
     {
       logger.log(Level.SEVERE, "Cannot access class path", e);
+      if (e instanceof RejectedAccessException) {
+    	  ScriptApproval.get().accessRejected((RejectedAccessException) e, ApprovalContext.create());
+      }
       return null;
     }
   }
 
+  private static final class MyRunnable implements Runnable {
+
+	private Object evaluated;
+	private GroovyShell groovyShell;
+	private String script;
+	
+	public MyRunnable(GroovyShell groovyShell, String script) {
+		this.groovyShell = groovyShell;
+		this.script = script;
+	}
+	
+	@Override
+	public void run() {
+		evaluated = groovyShell.evaluate(script);
+	}
+	
+	public Object getEvaluated() {
+		return evaluated;
+	}
+  }
+  
   /**
    * Check if a plugin is available.
    * @param shortName plugin short name

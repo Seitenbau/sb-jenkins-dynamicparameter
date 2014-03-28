@@ -19,14 +19,17 @@ import hudson.FilePath;
 import hudson.model.AutoCompletionCandidates;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
+import hudson.util.FormValidation;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
+import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.seitenbau.jenkins.plugins.dynamicparameter.config.DynamicParameterConfiguration;
@@ -50,6 +53,9 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
   /** Script, which generates the parameter value. */
   private final String _script;
 
+  /** Security sandbox. */
+  private final boolean _sandbox;
+
   /** Local class path. */
   private final FilePath _localBaseDirectory;
 
@@ -58,16 +64,17 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
 
   /** Class path. */
   private final String _classPath;
-
+  
   /**
    * Constructor.
    * @param name parameter name
    * @param script script, which generates the parameter value
+   * @param whether to use the security sandbox or not
    * @param description parameter description
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
    */
-  protected ScriptParameterDefinition(String name, String script, String description, String uuid,
+  protected ScriptParameterDefinition(String name, String script, boolean sandbox, String description, String uuid,
       Boolean remote, String classPath)
   {
     super(name, description, uuid, remote);
@@ -75,7 +82,8 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
     _localBaseDirectory = new FilePath(DynamicParameterConfiguration.INSTANCE.getBaseDirectoryFile());
     _remoteBaseDirectory = DEFAULT_REMOTE_CLASSPATH;
     _classPath = classPath;
-    _script = script;
+    _script = ScriptApproval.get().configuring(script, GroovyLanguage.get(), ApprovalContext.create());
+    _sandbox = sandbox;
   }
 
   /**
@@ -122,11 +130,16 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
   {
     return _classPath.split(CLASSPATH_SPLITTER);
   }
+  
+  public final boolean getSandbox() 
+  {
+	return _sandbox;
+  }
 
   @Override
   protected ClasspathScriptCall prepareLocalCall(Map<String, String> parameters)
   {
-    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), parameters, setupLocalClassPaths());
+    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), parameters, setupLocalClassPaths(), getSandbox());
     return call;
   }
 
@@ -134,7 +147,7 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
   protected ClasspathScriptCall prepareRemoteCall(VirtualChannel channel, Map<String, String> parameters) throws IOException,
       InterruptedException
   {
-    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), parameters, setupRemoteClassPaths(channel));
+    ClasspathScriptCall call = new ClasspathScriptCall(getScript(), parameters, setupRemoteClassPaths(channel), getSandbox());
     return call;
   }
   
@@ -244,6 +257,10 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
         return value.toLowerCase().split(CLASSPATH_SPLITTER);
       }
     }
+    
+    public FormValidation doCheckGroovyScript(@QueryParameter String value, @QueryParameter boolean sandbox) {
+    	return sandbox ? FormValidation.ok() : ScriptApproval.get().checking(value, GroovyLanguage.get());
+    }
 
   }
 
@@ -259,23 +276,26 @@ public abstract class ScriptParameterDefinition extends BaseParameterDefinition
     private final Map<String, String> _parameters;
 
     private final FilePath[] _classPaths;
+    
+    private final boolean _sandbox;
 
     /**
      * Constructor.
      * @param script script to execute
      * @param classPaths class paths
      */
-    public ClasspathScriptCall(String script, Map<String, String> parameters, FilePath[] classPaths)
+    public ClasspathScriptCall(String script, Map<String, String> parameters, FilePath[] classPaths, boolean sandbox)
     {
       _remoteScript = script;
       _parameters = parameters;
       _classPaths = classPaths;
+      _sandbox = sandbox;
     }
 
     @Override
     public Object call()
     {
-      return JenkinsUtils.execute(_remoteScript, _parameters, _classPaths);
+      return JenkinsUtils.execute(_remoteScript, _parameters, _classPaths, _sandbox);
     }
 
   }

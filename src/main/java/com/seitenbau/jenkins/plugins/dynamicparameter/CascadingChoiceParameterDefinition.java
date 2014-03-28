@@ -47,15 +47,16 @@ public class CascadingChoiceParameterDefinition extends ChoiceParameterDefinitio
    * @param name parameter name
    * @param parentPropertyName the name of the parent property
    * @param script script, which generates the parameter value
+   * @param sandbox whether to execute the script in the security sandbox or not
    * @param description parameter description
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
    */
   @DataBoundConstructor
-  public CascadingChoiceParameterDefinition(String name, String parentPropertyName, String script, String description, String uuid,
+  public CascadingChoiceParameterDefinition(String name, String parentPropertyName, String script, boolean sandbox, String description, String uuid,
       Boolean remote, Boolean readonlyInputField, String classPath)
   {
-    super(name, script, description, uuid, remote, readonlyInputField, classPath, null);
+    super(name, script, sandbox, description, uuid, remote, readonlyInputField, classPath, null);
     _parentPropertyName = parentPropertyName;
   }
 

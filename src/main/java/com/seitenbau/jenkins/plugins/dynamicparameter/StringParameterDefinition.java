@@ -45,11 +45,19 @@ public class StringParameterDefinition extends ScriptParameterDefinition
     this(name, script, description, uuid, remote, false, classPath);
   }
   
+  @Deprecated
+  public StringParameterDefinition(String name, String script, String description, String uuid,
+	      Boolean remote, Boolean readonlyInputField, String classPath)
+  {
+	this(name, script, /* sandbox*/ false, description, uuid, remote, false, classPath);
+  }
+  
   /**
    * Constructor with the parameter which are injected by the jenkins runtime.
    * 
    * @param name parameter name
    * @param script script, which generates the parameter value
+   * @param sandbox whether to execute the script in the security sandbox or not
    * @param description parameter description
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
@@ -57,10 +65,10 @@ public class StringParameterDefinition extends ScriptParameterDefinition
    * @param classPath the class path description
    */
   @DataBoundConstructor
-  public StringParameterDefinition(String name, String script, String description, String uuid,
+  public StringParameterDefinition(String name, String script, boolean sandbox, String description, String uuid,
       Boolean remote, Boolean readonlyInputField, String classPath)
   {
-    super(name, script, description, uuid, remote, classPath);
+    super(name, script, sandbox, description, uuid, remote, classPath);
     this.readonlyInputField = readonlyInputField;
   }
   
