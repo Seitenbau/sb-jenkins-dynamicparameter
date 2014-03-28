@@ -26,6 +26,9 @@ import java.util.List;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
+import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
 import org.jvnet.localizer.ResourceBundleHolder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -48,7 +51,7 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
   private final Boolean readonlyInputField;
 
   private String choiceType;
-
+  
   @Deprecated
   public ChoiceParameterDefinition(String name, String script, String description, String uuid,
       Boolean remote, String classPath)
@@ -56,22 +59,37 @@ public class ChoiceParameterDefinition extends ScriptParameterDefinition
     this(name, script, description, uuid, remote, false, classPath, PARAMETER_TYPE_SINGLE_SELECT);
   }
 
+  @Deprecated
+  public ChoiceParameterDefinition(String name, String script, String description, String uuid,
+          Boolean remote, Boolean readonlyInputField, String classPath, String choiceType)
+  {
+    this(name, script, /* sandbox */ false, description, uuid, remote, readonlyInputField, classPath, choiceType);
+  }
+  
   /**
    * Constructor.
    * @param name parameter name
    * @param script script, which generates the parameter value
+   * @param sandbox whether to execute the script in the security sandbox or not
    * @param description parameter description
    * @param uuid identifier (optional)
    * @param remote execute the script on a remote node
    * @param choiceType type of the choice (single, multi, etc.) to display
    */
   @DataBoundConstructor
-  public ChoiceParameterDefinition(String name, String script, String description, String uuid,
+  public ChoiceParameterDefinition(String name, String script, boolean sandbox, String description, String uuid,
           Boolean remote, Boolean readonlyInputField, String classPath, String choiceType)
   {
-    super(name, script, description, uuid, remote, classPath);
+    super(name, script, sandbox, description, uuid, remote, classPath);
     this.readonlyInputField = readonlyInputField;
     this.choiceType = choiceType;
+  }
+  
+  private Object readResolve() {
+	  if (!getSandbox()) {
+		  ScriptApproval.get().configuring(getScript(), GroovyLanguage.get(), ApprovalContext.create());
+	  }
+	  return this;
   }
 
   /**

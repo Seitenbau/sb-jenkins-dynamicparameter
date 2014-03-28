@@ -11,6 +11,8 @@ class ChoiceParameterDefinitionParameter
   private String uuid;
 
   private boolean remote;
+  
+  private boolean sandbox;
 
   public String getName()
   {
@@ -61,4 +63,13 @@ class ChoiceParameterDefinitionParameter
   {
     this.remote = remote;
   }
+
+  public boolean isSandbox() {
+	return sandbox;
+  }
+
+  public void setSandbox(boolean sandbox) {
+	this.sandbox = sandbox;
+  }
+  
 }

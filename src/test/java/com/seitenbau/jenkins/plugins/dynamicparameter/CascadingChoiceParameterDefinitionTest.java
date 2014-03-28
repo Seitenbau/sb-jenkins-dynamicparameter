@@ -18,12 +18,15 @@ import java.util.List;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
+import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
 import org.junit.Before;
 import org.junit.Test;
+import org.jvnet.hudson.test.HudsonTestCase;
 import org.kohsuke.stapler.StaplerRequest;
 
 /** Tests for {@link ChoiceParameterDefinition}. */
-public class CascadingChoiceParameterDefinitionTest
+public class CascadingChoiceParameterDefinitionTest extends HudsonTestCase
 {
   /** Groovy script which returns strings. */
   private static final String CHOICES_SCRIPT = "def theval = ['1111', '2222'].collect {  \"${parentProperty}.${it}\"}; " +
@@ -45,8 +48,9 @@ public class CascadingChoiceParameterDefinitionTest
    * Set-up method.
    */
   @Before
-  public final void setUp()
+  public final void setUp() throws Exception
   {
+	  super.setUp();
 	  defaultCascadingChoiceParameterBuilder = cascadingChoiceParameterDefinitionParameter();
     // @formatter:off
     defaultCascadingChoiceParameterBuilder
@@ -64,7 +68,7 @@ public class CascadingChoiceParameterDefinitionTest
   {
 	  CascadingChoiceParameterDefinitionParameter parameter = cascadingChoiceParameterBuilder.build();
     return new CascadingChoiceParameterDefinition(parameter.getName(), parameter.getParentPropertyName(), parameter.getScript(),
-        parameter.getDescription(), parameter.getUuid(), parameter.isRemote(), false, StringUtils.EMPTY);
+        parameter.isSandbox(), parameter.getDescription(), parameter.getUuid(), parameter.isRemote(), false, StringUtils.EMPTY);
   }
 
   /**
@@ -73,6 +77,7 @@ public class CascadingChoiceParameterDefinitionTest
   @Test
   public final void testGetChoices()
   {
+	ScriptApproval.get().preapprove(cascadingChoiceParameterDefinition.getScript(), GroovyLanguage.get());
     final List<Object> result = cascadingChoiceParameterDefinition.getChoices(CHOICES_SCRIPT_ARG_A);
     assertEqualLists(CHOICES_SCRIPT_RESULTS, result.toArray(new Object[result.size()]));
   }
