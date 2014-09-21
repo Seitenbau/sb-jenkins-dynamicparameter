@@ -4,9 +4,9 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.447</version><!-- which version of Jenkins is this plugin built against? -->
+    <version>1.532.3</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
-
+  
   <groupId>com.seitenbau.jenkins.plugins</groupId>
   <artifactId>dynamicparameter</artifactId>
   <packaging>hpi</packaging>

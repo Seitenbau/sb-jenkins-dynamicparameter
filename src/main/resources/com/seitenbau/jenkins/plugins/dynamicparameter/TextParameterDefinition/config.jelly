@@ -1,0 +1,37 @@
+<!--
+Copyright 2012 Seitenbau
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+  xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+  xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+  <f:entry title="${%Name}" help="/help/parameter/name.html">
+    <f:textbox name="parameter.name" value="${instance.name}" />
+  </f:entry>
+  <f:entry title="${%Default Value Script}" field="defaultValueScript">
+    <f:textarea name="parameter.script" value="${instance.script}" />
+  </f:entry>
+  <f:entry title="${%Class Paths}" field="classPath">
+    <f:textbox name="parameter.classPath" value="${instance.classPath}" />
+  </f:entry>
+  <f:entry title="${%Remote Script}" field="remoteScript">
+    <f:checkbox name="parameter.remote" checked="${instance.remote}" />
+  </f:entry>
+  <f:entry title="${%Description}" help="/help/parameter/description.html">
+    <f:textarea name="parameter.description" value="${instance.description}" />
+  </f:entry>
+  <f:entry title="${%Readonly Input Field}" field="readonlyInputField">
+    <f:checkbox name="parameter.readonlyInputField" checked="${instance.readonlyInputField}" />
+  </f:entry>
+</j:jelly>

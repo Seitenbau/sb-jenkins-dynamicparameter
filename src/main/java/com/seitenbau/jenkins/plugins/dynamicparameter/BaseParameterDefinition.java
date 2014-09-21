@@ -23,8 +23,8 @@ import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -142,7 +142,7 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
   }
 
   @Override
-  public final ParameterValue createValue(StaplerRequest req, JSONObject jo)
+  public ParameterValue createValue(StaplerRequest req, JSONObject jo)
   {
     final JSONObject parameterJsonModel = new JSONObject(false);
     final Object value = jo.get("value");
@@ -181,7 +181,7 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
    * @return if the value is valid the same parameter value
    * @throws IllegalArgumentException if the value in not valid
    */
-  protected StringParameterValue checkParameterValue(StringParameterValue value)
+  protected ParameterValue checkParameterValue(ParameterValue value)
   {
     return value;
   }

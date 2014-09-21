@@ -1,0 +1,108 @@
+<!--
+Copyright 2012 Seitenbau
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+  xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+  xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+  <f:entry title="${%Name}" help="/help/parameter/name.html">
+    <f:textbox name="parameter.name" value="${instance.name}" />
+  </f:entry>
+  <f:entry title="${%Description}" help="/help/parameter/description.html">
+    <f:textarea name="parameter.description" value="${instance.description}" />
+  </f:entry>
+  <f:entry title="${%Remote Script}" field="remoteScript">
+    <f:checkbox name="parameter.remote" checked="${instance.remote}" />
+  </f:entry>
+  <f:entry title="${%Readonly Input Field}" field="readonlyInputField">
+    <f:checkbox name="parameter.readonlyInputField" checked="${instance.readonlyInputField}" />
+  </f:entry>
+
+  <!-- Scriptler script and parameters -->
+  <st:once>
+    <script type="text/javascript" src="${rootURL}/plugin/scriptler/lib/scriptler.js" />
+  </st:once>
+  <j:choose>
+    <j:when test="${empty(descriptor.scripts)}">
+      <f:entry title="">
+        <div>
+          ${%WarnNoScript}
+        </div>
+      </f:entry>
+    </j:when>
+    <j:otherwise>
+<!--
+      <j:if test="${!h.hasPermission(it.build,descriptor.requiredPermission)}">
+        <div class="warning">${%NoPermission}</div>
+      </j:if>
+-->
+      <f:entry title="${%Script}" field="defaultValueScript">
+        <select name="scriptlerScriptId" onChange="scriptler_initDetailLink(this);scriptler_showParams(this, this.value);" >
+          <option value="">(Default)</option>
+          <j:forEach var="inst" items="${descriptor.scripts}" varStatus="loop">
+            <j:choose>
+              <j:when test="${inst.id == instance.scriptlerScriptId}">
+                <option value="${inst.id}" selected="selected">${inst.name}</option>
+              </j:when>
+              <j:otherwise>
+                <option value="${inst.id}">${inst.name}</option>
+              </j:otherwise>
+            </j:choose>
+          </j:forEach>
+        </select>
+        <!-- the "show script" link does not work: scriptler expects only one per document
+        <a target="_blank" name="showScriptlerDetailLink" href="" style="display:none;" onclick="window.open(this.href,'window','width=900,height=640,resizable,scrollbars,toolbar,menubar') ;return false;"> ${%ViewScript}</a>
+         -->
+        <f:block>
+          <table>
+            <!-- <f:optionalBlock name="defineParams" title="${%ParametersDescription}" checked="${!empty(instance.parameters)}"> -->
+            <f:entry title="${%Parameters}" field="parameters">
+              <f:repeatable var="param" items="${instance.parameters}" name="parameters" noAddButton="true" minimum="1">
+                <table width="100%">
+                  <f:entry>
+                    ${%Parameter name} <input type="text" name="name" value="${param.name}" size="20"/>
+                    ${%Parameter value} <input type="text" name="value" value="${param.value}" size="30"/>
+                    <input type="button" name="delete_button" value="${%Delete Parameter}" class="repeatable-delete show-if-not-only" style="margin-left: 1em;" />
+                    <input type="button" name="add_button" value="${%Add Parameter}" class="repeatable-add show-if-last" />
+                  </f:entry>
+                </table>
+              </f:repeatable>
+            </f:entry>
+            <!-- </f:optionalBlock> -->
+          </table>
+        </f:block>
+      </f:entry>
+    </j:otherwise>
+  </j:choose>
+  <st:bind var="scriptlerBuilderDesc" value="${descriptor}"/>
+  <st:once>
+    <script type="text/javascript">
+Event.observe(window, 'load', function() { 
+ var all = new Array();
+ all = document.getElementsByName('scriptlerScriptId');
+  for(var i = 0; i &lt; all.length; i++) {
+  	  all.item(i).disabled=<j:out value="${!h.hasPermission(it.build,descriptor.requiredPermission)}" />;
+      scriptler_initDetailLink(all.item(i));
+      scriptler_showParams(all.item(i), all.item(i).value);
+  }
+  // remember the job name to send it along with the form
+  var jobName = document.getElementsByName('name').item(0).value;
+  var allBackupJobNames = document.getElementsByName('backupJobName');
+  for(var i = 0; i &lt; allBackupJobNames.length; i++) {
+      allBackupJobNames.item(i).value = jobName; 
+  } 
+});
+    </script>
+  </st:once>
+</j:jelly>
