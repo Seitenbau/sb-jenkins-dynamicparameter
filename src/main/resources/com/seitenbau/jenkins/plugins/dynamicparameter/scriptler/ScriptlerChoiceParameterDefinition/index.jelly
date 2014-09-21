@@ -32,19 +32,19 @@ limitations under the License.
       <j:if test="${!it.readonlyInputField}">
         <j:if test="${choiceType eq 'PT_SINGLE_SELECT'}">
           <select name="value">
-            <st:include page="../../commons/selectContent.jelly"/>
+            <st:include page="/com/seitenbau/jenkins/plugins/dynamicparameter/commons/selectContent.jelly"/>
           </select>
         </j:if>
         <j:if test="${choiceType eq 'PT_MULTI_SELECT'}">
           <select name="value" multiple="multiple" size="${it.visibleItemCount}">
-            <st:include page="../../commons/selectContent.jelly"/>
+            <st:include page="/com/seitenbau/jenkins/plugins/dynamicparameter/commons/selectContent.jelly"/>
           </select>
         </j:if>
         <j:if test="${choiceType eq 'PT_RADIO'}">
-          <st:include page="../../commons/radioContent.jelly"/>
+          <st:include page="/com/seitenbau/jenkins/plugins/dynamicparameter/commons/radioContent.jelly"/>
         </j:if>
         <j:if test="${choiceType eq 'PT_CHECKBOX'}">
-          <st:include page="../../commons/checkboxContent.jelly"/>
+          <st:include page="/com/seitenbau/jenkins/plugins/dynamicparameter/commons/checkboxContent.jelly"/>
         </j:if>
       </j:if>
     </div>
