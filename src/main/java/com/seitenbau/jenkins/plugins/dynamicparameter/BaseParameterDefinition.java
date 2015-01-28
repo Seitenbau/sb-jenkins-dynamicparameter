@@ -23,6 +23,7 @@ import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -235,7 +236,11 @@ public abstract class BaseParameterDefinition extends SimpleParameterDefinition
           }
         }
       }
-      Callable<Object, Throwable> call = prepareLocalCall(parameters);
+      
+      // for scripts executed locally, expose the current Jenkins job as "currentJob" variable
+      Map<String, Object> p = new HashMap<String, Object>(parameters);
+      p.put("currentJob", JenkinsUtils.findCurrentProject(getUUID()));
+      Callable<Object, Throwable> call = prepareLocalCall((Map)p);
       return call.call();
     }
     catch (Throwable e)
